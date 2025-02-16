@@ -6,7 +6,7 @@
 - Download and include DirectX SDK June 2010
 
 ## Used repos:
-= https://github.com/ocornut/imgui
+- https://github.com/ocornut/imgui
 - https://github.com/pa1n-dev/nixware_x64
 - https://github.com/JustasMasiulis/xorstr
 
