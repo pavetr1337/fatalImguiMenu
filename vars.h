@@ -2,13 +2,6 @@
 namespace vars {
     inline bool isMenuOpen = true;
 
-    inline bool isJopa123 = true;
-    inline float scrollerTest = 0.f;
-    inline int numTest = 0;
-    inline int obkak_list = 0;
-
-    inline ImGuiKey keybind = ImGuiKey_None;
-
     namespace colors
     {
         inline float window_bg[4] = { 0.066f, 0.059f, 0.141f, 1.f };
@@ -41,5 +34,44 @@ namespace vars {
         inline float margin = 10.f;
         inline ImVec2 tab_padding = {10.f,10.f};
         inline ImVec2 win_size = { 848.f,588.f };
+    }
+
+    namespace settings {
+        namespace rage {
+            inline int hitchance = 100;
+            inline int pointscale = 34;
+            inline int mindamage = 100;
+
+            inline int hitbox = 0;
+            inline int multipoint = 0;
+            inline int targetsel = 0;
+
+            inline bool autostop = false;
+            inline ImGuiKey autostop_bind = ImGuiKey_None;
+
+            inline bool autoscope = false;
+            inline bool ignore_limbs = false;
+            inline bool autorevolver = false;
+
+            inline bool aimbot = false;
+            inline bool silent = false;
+            inline int maxfov = 0;
+
+            inline bool autofire = false;
+            inline bool delay_shot = false;
+            inline bool duck_peek = false;
+            inline bool force_bodyaim = false;
+            inline bool force_shoot = false;
+            inline bool headshot_only = false;
+
+            inline bool knifebot = false;
+            inline bool zeusbot = false;
+
+            inline bool nospread = false;
+            inline ImGuiKey nospread_bind = ImGuiKey_None;
+
+            inline bool doubletap = false;
+            inline ImGuiKey doubletap_bind = ImGuiKey_None;
+        }
     }
 }
