@@ -1,6 +1,7 @@
 # fatalImguiMenu
 ## Screenshot:
-![изображение](https://github.com/user-attachments/assets/a6986541-9023-4ceb-84f2-d7115391dbb5)
+![изображение](https://github.com/user-attachments/assets/5dba719b-f9c8-4153-a756-b7608e63e28d)
+
 
 ## How to compile DX9 demo:
 - Download and include DirectX SDK June 2010
