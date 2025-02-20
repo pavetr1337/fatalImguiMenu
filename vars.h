@@ -38,6 +38,7 @@ namespace vars {
 
     namespace settings {
         namespace rage {
+            // Aimbot
             inline int hitchance = 100;
             inline int pointscale = 34;
             inline int mindamage = 100;
@@ -72,6 +73,18 @@ namespace vars {
 
             inline bool doubletap = false;
             inline ImGuiKey doubletap_bind = ImGuiKey_None;
+
+            // Anti-aim
+            inline bool aa_enable = false;
+            inline int pitch = 0;
+            inline int pitch_custom = 0;
+            inline int yaw = 0;
+            inline int yaw_custom = 0;
+            inline bool hideshot = false;
+
+            inline bool fake_enable = false;
+            inline int fake_mode = 0;
+            inline int fake_limit = 0;
         }
     }
 }
