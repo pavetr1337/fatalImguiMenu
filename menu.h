@@ -11,5 +11,5 @@
 #include "fonts/JosefinSansBold.h"
 #include "fonts/FontIcon.h"
 
-void draw_menu();
+void draw_menu(IDirect3DDevice9* device);
 void load_fonts();

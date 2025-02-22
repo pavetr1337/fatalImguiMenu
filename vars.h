@@ -16,7 +16,7 @@ namespace vars {
         inline float button_hover[4] = { 0.145f, 0.122f, 0.302f, 1.f };
         inline float button_clicked[4] = { 0.169f, 0.141f, 0.349f, 1.f };
 
-        inline float frame_bg_hover[4] = { frame_bg_hover[0] * 1.1f, frame_bg_hover[1] * 1.1f, frame_bg_hover[2] * 1.1f, 1.f };
+        inline float frame_bg_hover[4] = { window_bg[0] * 1.1f, window_bg[1] * 1.1f, window_bg[2] * 1.1f, 1.f };
         inline float frame_bg_active[4] = { frame_bg_hover[0] * 1.5f, frame_bg_hover[1] * 1.5f, frame_bg_hover[2] * 1.5f, 1.f};
         //rgba(189, 28, 98, 255)
     }
@@ -85,6 +85,50 @@ namespace vars {
             inline bool fake_enable = false;
             inline int fake_mode = 0;
             inline int fake_limit = 0;
+        }
+        namespace visuals {
+            inline bool enabled = false;
+
+            inline bool name = false;
+            inline float name_col[4] = { 1.f, 1.f, 1.f, 1.f };
+
+            inline bool box = false;
+            inline float box_col[4] = { 1.f, 1.f, 1.f, 1.f };
+
+            inline bool health = false;
+            inline bool health_text = true;
+            inline bool health_bar = false;
+            inline float health_col[4] = { 1.f, 1.f, 1.f, 1.f };
+
+            inline bool weapon_name = false;
+            inline float weapon_col[4] = { 1.f, 1.f, 1.f, 1.f };
+
+            inline bool armor = false;
+            inline float armor_col[4] = { 1.f, 1.f, 1.f, 1.f };
+
+            inline bool skeleton = false;
+            inline float skeleton_col[4] = { 1.f, 1.f, 1.f, 1.f };
+
+            inline bool chams_vis = false;
+            inline int chams_vis_type = false;
+            inline float chams_vis_col[4] = { 1.f, 1.f, 1.f, 1.f };
+
+            inline bool chams_invis = false;
+            inline int chams_invis_type = false;
+            inline float chams_invis_col[4] = { 1.f, 1.f, 1.f, 1.f };
+
+            inline bool chams_backtrack_vis = false;
+            inline int chams_backtrack_vis_type = false;
+            inline float chams_backtrack_vis_col[4] = { 1.f, 1.f, 1.f, 1.f };
+
+            inline bool chams_backtrack_invis = false;
+            inline int chams_backtrack_invis_type = false;
+            inline float chams_backtrack_invis_col[4] = { 1.f, 1.f, 1.f, 1.f };
+
+            inline bool glow = false;
+            inline float glow_col[4] = { 1.f, 1.f, 1.f, 1.f };
+
+            inline int distance = 0;
         }
     }
 }

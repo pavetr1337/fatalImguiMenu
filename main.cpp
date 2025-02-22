@@ -160,7 +160,7 @@ int main(int, char**)
             ImGui::End();
         }
 
-        draw_menu();
+        draw_menu(g_pd3dDevice);
 
         // 3. Show another simple window.
         if (show_another_window)
