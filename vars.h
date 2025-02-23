@@ -87,6 +87,16 @@ namespace vars {
             inline int fake_limit = 0;
         }
         namespace visuals {
+            // LOCAL
+            inline bool hands_chams = false;
+            inline int hands_chams_type = 0;
+            inline float hands_chams_col[4] = { 1.f, 1.f, 1.f, 1.f };
+            inline bool hands_chams_o = false;
+
+            inline bool enable_fov = false;
+            inline int fov = 100;
+
+            // PLAYER VIS
             inline bool enabled = false;
 
             inline bool name = false;
@@ -109,26 +119,95 @@ namespace vars {
             inline bool skeleton = false;
             inline float skeleton_col[4] = { 1.f, 1.f, 1.f, 1.f };
 
+            inline bool enemy_chams_o = false;
+
             inline bool chams_vis = false;
-            inline int chams_vis_type = false;
+            inline int chams_vis_type = 0;
             inline float chams_vis_col[4] = { 1.f, 1.f, 1.f, 1.f };
 
             inline bool chams_invis = false;
-            inline int chams_invis_type = false;
+            inline int chams_invis_type = 0;
             inline float chams_invis_col[4] = { 1.f, 1.f, 1.f, 1.f };
 
             inline bool chams_backtrack_vis = false;
-            inline int chams_backtrack_vis_type = false;
+            inline int chams_backtrack_vis_type = 0;
             inline float chams_backtrack_vis_col[4] = { 1.f, 1.f, 1.f, 1.f };
 
             inline bool chams_backtrack_invis = false;
-            inline int chams_backtrack_invis_type = false;
+            inline int chams_backtrack_invis_type = 0;
             inline float chams_backtrack_invis_col[4] = { 1.f, 1.f, 1.f, 1.f };
 
             inline bool glow = false;
             inline float glow_col[4] = { 1.f, 1.f, 1.f, 1.f };
 
             inline int distance = 0;
+
+            // ENT VIS
+            inline bool ent_enabled = false;
+
+            inline bool ent_chams_o = false;
+
+            inline bool ent_name = false;
+            inline float ent_name_col[4] = { 1.f, 1.f, 1.f, 1.f };
+
+            inline bool ent_box = false;
+            inline float ent_box_col[4] = { 1.f, 1.f, 1.f, 1.f };
+
+            inline bool ent_health = false;
+            inline bool ent_health_text = true;
+            inline bool ent_health_bar = false;
+            inline float ent_health_col[4] = { 1.f, 1.f, 1.f, 1.f };
+
+            inline bool ent_chams_vis = false;
+            inline int ent_chams_vis_type = 0;
+            inline float ent_chams_vis_col[4] = { 1.f, 1.f, 1.f, 1.f };
+
+            inline bool ent_chams_invis = false;
+            inline int ent_chams_invis_type = 0;
+            inline float ent_chams_invis_col[4] = { 1.f, 1.f, 1.f, 1.f };
+
+            inline bool ent_glow = false;
+            inline float ent_glow_col[4] = { 1.f, 1.f, 1.f, 1.f };
+
+            inline int ent_distance = 0;
+
+            // WORLD
+            inline bool enable_colormod = false;
+            inline float colormod_col[4] = { 1.f, 1.f, 1.f, 1.f };
+
+            inline bool enable_skybox = false;
+            inline int skybox = 0;
+            inline bool fullbright = false;
+        }
+        namespace misc {
+            inline bool autopeek = false;
+            inline ImGuiKey autopeek_bind = ImGuiKey_None;
+
+            inline bool thirdperson = false;
+            inline ImGuiKey thirdperson_bind = ImGuiKey_None;
+            inline int thirdperson_distance = 0;
+
+            inline bool freecam = false;
+            inline ImGuiKey freecam_bind = ImGuiKey_None;
+            inline int freecam_distance = 0;
+            inline int hitsound = 0;
+            inline int killsound = 0;
+
+            inline bool bhop = false;
+            inline bool autostrafe = false;
+            inline int autostrafe_type = 0;
+
+            inline int dpi_scale = 0;
+        }
+        namespace skins {
+            inline int selected_skin = 0;
+            inline char skin_search[128];
+
+            inline int selected_paint = 0;
+            inline char paint_search[128];
+
+            inline int selected_wear = 0;
+            inline char wear_search[128];
         }
     }
 }

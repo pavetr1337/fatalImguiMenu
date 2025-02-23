@@ -1,7 +1,8 @@
 #include "menu.h"
 #include "vars.h"
 #include "texture.hpp"
-#include "vis_preview.hpp"
+#include "img/vis_preview.hpp"
+#include "img/vis_preview_ent.hpp"
 
 const char* tabs[6] = {
         ICON_FA_BOMB " RAGE",
@@ -17,6 +18,7 @@ void load_fonts() {
 
     ImFontConfig fontCfg;
     fontCfg.FontDataOwnedByAtlas = false;
+    
     vars::fonts::josefin_sans_regular = io.Fonts->AddFontFromMemoryTTF(josefinSansRegular, josefinSansRegularSize, 16.0f, &fontCfg);
     vars::fonts::josefin_sans_header = io.Fonts->AddFontFromMemoryTTF(josefinSansBold, josefinSansBoldSize, 18.0f, &fontCfg);
 
@@ -44,7 +46,7 @@ void draw_over_items() {
             ImVec2 pos = item.second.second;
 
             ImVec2 label_size = ImGui::CalcTextSize(text);
-            if (curtab != 3) {
+            if (curtab < 3) {
                 ImGui::GetWindowDrawList()->AddText(ImVec2(pos[0], pos[1] - label_size[1]), ImGui::GetColorU32(ImGuiCol_Text), text);
             }
             else {
@@ -124,12 +126,12 @@ void imgui_checkbox_col(const char* label, bool* v, float* col, float width) {
 }
 
 void imgui_drawimage(IDirect3DDevice9* device, const unsigned char* image_data, size_t image_size, ImVec2 size) {
-    static IDirect3DTexture9* texture = LoadTextureFromMemory(device, image_data, image_size);
+    IDirect3DTexture9* texture = LoadTextureFromMemory(device, image_data, image_size);
 
     if (!texture) {
         ImGui::Text(xorstr("No texture"));
     }
-    ImGui::Image((ImTextureID)texture, size);
+    ImGui::Image((ImTextureID)(intptr_t)texture, size);
 }
 
 ImVec4 col_to_imvec4(float* col) {
@@ -186,6 +188,14 @@ void display_vis_preview(ImVec2 pos, ImVec2 size) {
                     ImGui::GetWindowDrawList()->AddText(ImVec2(pos.x - ImGui::CalcTextSize("100").x - vars::styles::margin, pos.y + ImGui::CalcTextSize("100").y * 2.f), ImGui::GetColorU32(ImGuiCol_Text), "100");
                 }
             }
+            else {
+                if (!vars::settings::visuals::health_bar) {
+                    ImGui::GetWindowDrawList()->AddText(ImVec2(pos.x - ImGui::CalcTextSize("100").x - vars::styles::margin * 0.25f, pos.y + ImGui::CalcTextSize("100").y), ImGui::GetColorU32(ImGuiCol_Text), "100");
+                }
+                else {
+                    ImGui::GetWindowDrawList()->AddText(ImVec2(pos.x - ImGui::CalcTextSize("100").x - vars::styles::margin, pos.y + ImGui::CalcTextSize("100").y), ImGui::GetColorU32(ImGuiCol_Text), "100");
+                }
+            }
             ImGui::PopStyleColor();
         }
         else {
@@ -212,6 +222,47 @@ void display_vis_preview(ImVec2 pos, ImVec2 size) {
         ImGui::PopStyleColor();
     }
 }
+
+void display_vis_preview_ent(ImVec2 pos, ImVec2 size) {
+    if (vars::settings::visuals::ent_name) {
+        ImGui::PushStyleColor(ImGuiCol_Text, col_to_imvec4(vars::settings::visuals::ent_name_col));
+        ImGui::GetWindowDrawList()->AddText(ImVec2(pos.x + size.x / 2 - ImGui::CalcTextSize("Printer")[0] / 2, pos.y), ImGui::GetColorU32(ImGuiCol_Text), "Printer");
+        ImGui::PopStyleColor();
+    }
+
+    if (vars::settings::visuals::ent_box) {
+        ImGui::PushStyleColor(ImGuiCol_Text, col_to_imvec4(vars::settings::visuals::ent_box_col));
+        ImGui::GetWindowDrawList()->AddRect(ImVec2(pos.x, pos.y + check_size), ImVec2(pos.x + size.x, pos.y + size.y), ImGui::GetColorU32(ImGuiCol_Text), 0.f, 0.f, 1.f);
+        ImGui::PopStyleColor();
+    }
+    if (vars::settings::visuals::ent_health) {
+        if (vars::settings::visuals::ent_health_bar) {
+            ImGui::PushStyleColor(ImGuiCol_Text, col_to_imvec4(vars::colors::window_bg));
+            ImGui::GetWindowDrawList()->AddRectFilled(ImVec2(pos.x - vars::styles::margin * 0.75f, pos.y + check_size), ImVec2(pos.x - vars::styles::margin * 0.25f, pos.y + size.y), ImGui::GetColorU32(ImGuiCol_Text));
+            ImGui::PopStyleColor();
+            ImGui::PushStyleColor(ImGuiCol_Text, col_to_imvec4(vars::settings::visuals::ent_health_col));
+            ImGui::GetWindowDrawList()->AddRectFilled(ImVec2(pos.x - vars::styles::margin * 0.75f, pos.y + check_size + size.y * 0.2f), ImVec2(pos.x - vars::styles::margin * 0.25f, pos.y + size.y), ImGui::GetColorU32(ImGuiCol_Text));
+            ImGui::PopStyleColor();
+        }
+        if (vars::settings::visuals::ent_health_text) {
+            if (vars::settings::visuals::ent_health_bar) {
+                ImGui::PushStyleColor(ImGuiCol_Text, col_to_imvec4(vars::settings::visuals::ent_health_col));
+                ImGui::GetWindowDrawList()->AddText(ImVec2(pos.x - ImGui::CalcTextSize("80").x - vars::styles::margin, pos.y + ImGui::CalcTextSize("80").y), ImGui::GetColorU32(ImGuiCol_Text), "80");
+                ImGui::PopStyleColor();
+            }
+            else {
+                ImGui::PushStyleColor(ImGuiCol_Text, col_to_imvec4(vars::settings::visuals::ent_health_col));
+                ImGui::GetWindowDrawList()->AddText(ImVec2(pos.x - ImGui::CalcTextSize("80").x - vars::styles::margin * 0.25f, pos.y + ImGui::CalcTextSize("80").y), ImGui::GetColorU32(ImGuiCol_Text), "80");
+                ImGui::PopStyleColor();
+            }
+        }
+    }
+}
+
+int selected_script = 0; // From LUA tab
+const char* chams_types[] = { "Flat", "Metal", "Glass", "Wireframe", "Glow" };
+
+const char* skyboxes[] = { "Morning", "Day", "Evening", "Night", "Cloud" };
 
 void draw_menu(IDirect3DDevice9* device) {
 	ImGuiStyle& style = ImGui::GetStyle();
@@ -373,6 +424,7 @@ void draw_menu(IDirect3DDevice9* device) {
     
     float row_width = (vars::styles::win_size[0]) / 3 - vars::styles::margin * 1.3f;
     float row_height = vars::styles::win_size[1] - endtab_h - maintab_h - 2.f - vars::styles::margin * 7;
+    float vis_small_h = row_height / 5 - vars::styles::margin * 2;
 
     ImVec2 checkboxSize = ImVec2(row_width - vars::styles::margin * 2, 16.f);
 
@@ -388,10 +440,10 @@ void draw_menu(IDirect3DDevice9* device) {
                 ImGui::BeginChild(xorstr("aim_row_1"), ImVec2(row_width, row_height), ImGuiChildFlags_Borders, ImGuiWindowFlags_AlwaysUseWindowPadding);
                 add_child_label(ImGui::GetCursorScreenPos(), "WEAPON", curtab);
 
-                ImGui::SliderInt(xorstr("Hit-chance"), &vars::settings::rage::hitchance, 0, 100, "%d%%", ImGuiSliderFlags_FixedWidth, checkboxSize[0]);
+                ImGui::SliderInt(xorstr("Hit-chance"), &vars::settings::rage::hitchance, 0, 100, "%d%%", ImGuiSliderFlags_FixedWidth | ImGuiSliderFlags_AlwaysClamp, checkboxSize[0]);
                 // Also SliderFloat works
-                ImGui::SliderInt(xorstr("Pointscale"), &vars::settings::rage::pointscale, 0, 100, "%d%%", ImGuiSliderFlags_FixedWidth, checkboxSize[0]);
-                ImGui::SliderInt(xorstr("Min-damage"), &vars::settings::rage::mindamage, 0, 150, "%d hp", ImGuiSliderFlags_FixedWidth, checkboxSize[0]);
+                ImGui::SliderInt(xorstr("Pointscale"), &vars::settings::rage::pointscale, 0, 100, "%d%%", ImGuiSliderFlags_FixedWidth | ImGuiSliderFlags_AlwaysClamp, checkboxSize[0]);
+                ImGui::SliderInt(xorstr("Min-damage"), &vars::settings::rage::mindamage, 0, 150, "%d hp", ImGuiSliderFlags_FixedWidth | ImGuiSliderFlags_AlwaysClamp, checkboxSize[0]);
                 
                 const char* hit_bones[] = { "Head","Chest","Stomach","Arms","Legs","Feet"};
                 ImGui::Combo(xorstr("Hitboxes"), &vars::settings::rage::hitbox, hit_bones, 6, -1, checkboxSize[0]);
@@ -423,7 +475,7 @@ void draw_menu(IDirect3DDevice9* device) {
 
                 ImGui::CheckboxSized(xorstr("Aimbot"), &vars::settings::rage::aimbot, ImVec2(checkboxSize[0], check_size));
                 ImGui::CheckboxSized(xorstr("Silent aim"), &vars::settings::rage::silent, ImVec2(checkboxSize[0], check_size));
-                ImGui::SliderInt(xorstr("Maximum fov"), &vars::settings::rage::maxfov, 0, 180, "%d deg", ImGuiSliderFlags_FixedWidth, checkboxSize[0]);
+                ImGui::SliderInt(xorstr("Maximum fov"), &vars::settings::rage::maxfov, 0, 180, "%d deg", ImGuiSliderFlags_FixedWidth | ImGuiSliderFlags_AlwaysClamp, checkboxSize[0]);
                 ImGui::CheckboxSized(xorstr("Autofire"), &vars::settings::rage::autofire, ImVec2(checkboxSize[0], check_size));
                 ImGui::CheckboxSized(xorstr("Delay shot"), &vars::settings::rage::delay_shot, ImVec2(checkboxSize[0], check_size));
                 ImGui::CheckboxSized(xorstr("Duck peek assist"), &vars::settings::rage::duck_peek, ImVec2(checkboxSize[0], check_size));
@@ -479,13 +531,13 @@ void draw_menu(IDirect3DDevice9* device) {
                 const char* pitches[] = { "None","Down","Up","Zero","Custom"};
                 ImGui::Combo(xorstr("Pitch"), &vars::settings::rage::pitch, pitches, 5, -1, checkboxSize[0]);
                 if (vars::settings::rage::pitch == 4) {
-                    ImGui::SliderInt(xorstr("Custom Pitch"), &vars::settings::rage::pitch_custom, -180, 180, "%d deg", ImGuiSliderFlags_FixedWidth, checkboxSize[0]);
+                    ImGui::SliderInt(xorstr("Custom Pitch"), &vars::settings::rage::pitch_custom, -180, 180, "%d deg", ImGuiSliderFlags_FixedWidth | ImGuiSliderFlags_AlwaysClamp, checkboxSize[0]);
                 }
 
                 const char* yaws[] = { "None","Backwards","Zero","Random","Custom"};
                 ImGui::Combo(xorstr("Yaw"), &vars::settings::rage::yaw, yaws, 5, -1, checkboxSize[0]);
                 if (vars::settings::rage::yaw == 4) {
-                    ImGui::SliderInt(xorstr("Custom Yaw"), &vars::settings::rage::yaw_custom, -180, 180, "%d deg", ImGuiSliderFlags_FixedWidth, checkboxSize[0]);
+                    ImGui::SliderInt(xorstr("Custom Yaw"), &vars::settings::rage::yaw_custom, -180, 180, "%d deg", ImGuiSliderFlags_FixedWidth | ImGuiSliderFlags_AlwaysClamp, checkboxSize[0]);
                 }
                 else {
                     ImGui::Spacing();
@@ -503,7 +555,7 @@ void draw_menu(IDirect3DDevice9* device) {
                 const char* fakes[] = { "None","Always on","Adaptive" };
                 ImGui::Combo(xorstr("Mode"), &vars::settings::rage::fake_mode, fakes, 3, -1, checkboxSize[0]);
                 if (vars::settings::rage::fake_mode != 0) {
-                    ImGui::SliderInt(xorstr("Limit"), &vars::settings::rage::fake_limit, 1, 14, "%d", ImGuiSliderFlags_FixedWidth, checkboxSize[0]);
+                    ImGui::SliderInt(xorstr("Limit"), &vars::settings::rage::fake_limit, 1, 14, "%d", ImGuiSliderFlags_FixedWidth | ImGuiSliderFlags_AlwaysClamp, checkboxSize[0]);
                 }
 
                 ImGui::EndChild();
@@ -522,24 +574,47 @@ void draw_menu(IDirect3DDevice9* device) {
         {
             if (ImGui::BeginTabItem(xorstr("Local"))) {
 
+                ImGui::SetCursorPosY(maintab_h);
+
+                ImGui::BeginChild(xorstr("vis_sect_1"), ImVec2(row_width, vis_small_h * 2), ImGuiChildFlags_Borders, ImGuiWindowFlags_AlwaysUseWindowPadding);
+                add_child_label(ImGui::GetCursorScreenPos(), "HANDS", curtab);
+
+                imgui_checkbox_col(xorstr("Hands chams"), &vars::settings::visuals::hands_chams, vars::settings::visuals::hands_chams_col, row_width);
+                ImGui::Combo(xorstr("Type"), &vars::settings::visuals::hands_chams_type, chams_types, 5, -1, checkboxSize[0]);
+                ImGui::Spacing();
+                ImGui::CheckboxSized(xorstr("Draw original model"), &vars::settings::visuals::hands_chams_o, ImVec2(checkboxSize[0], check_size));
+
+                ImGui::EndChild();
+
+                ImGui::SetCursorPos(ImVec2(0.f, vis_small_h * 2 + maintab_h + vars::styles::margin*1.5f));
+
+                ImGui::BeginChild(xorstr("vis_sect_2"), ImVec2(row_width, vis_small_h * 2), ImGuiChildFlags_Borders, ImGuiWindowFlags_AlwaysUseWindowPadding);
+                add_child_label(ImGui::GetCursorScreenPos(), "GENERAL", curtab);
+
+                ImGui::CheckboxSized(xorstr("FOV Changer"), &vars::settings::visuals::enable_fov, ImVec2(checkboxSize[0], check_size));
+                
+                if (vars::settings::visuals::enable_fov) {
+                    ImGui::SliderInt(xorstr("FOV"), &vars::settings::visuals::fov, 80, 240, "%d deg", ImGuiSliderFlags_FixedWidth | ImGuiSliderFlags_AlwaysClamp, checkboxSize[0]);
+                }
+
+                ImGui::EndChild();
+
                 ImGui::EndTabItem();
             }
             if (ImGui::BeginTabItem(xorstr("Player"))) {
                 ImGui::SetCursorPosY(maintab_h);
 
-                float vis_small_h = row_height / 5 - vars::styles::margin * 2;
-
                 ImGui::BeginChild(xorstr("vis_sect_1"), ImVec2(row_width, vis_small_h*2), ImGuiChildFlags_Borders, ImGuiWindowFlags_AlwaysUseWindowPadding);
                 add_child_label(ImGui::GetCursorScreenPos(), "GENERAL", curtab);
 
                 ImGui::CheckboxSized(xorstr("Enabled"), &vars::settings::visuals::enabled, ImVec2(checkboxSize[0], check_size));
-                ImGui::SliderInt(xorstr("Draw distance"), &vars::settings::visuals::distance, 0, 100000, "%d m", ImGuiSliderFlags_FixedWidth, checkboxSize[0]);
+                ImGui::SliderInt(xorstr("Draw distance"), &vars::settings::visuals::distance, 0, 100000, "%d m", ImGuiSliderFlags_FixedWidth | ImGuiSliderFlags_AlwaysClamp, checkboxSize[0]);
 
                 ImGui::EndChild();
 
                 ImGui::SetCursorPosY(ImGui::GetCursorPosY()+vars::styles::margin);
 
-                ImGui::BeginChild(xorstr("vis_sect_2"), ImVec2(row_width, row_height-vis_small_h*2-vars::styles::margin), ImGuiChildFlags_Borders, ImGuiWindowFlags_AlwaysUseWindowPadding);
+                ImGui::BeginChild(xorstr("vis_sect_2"), ImVec2(row_width, row_height-vis_small_h*2-vars::styles::margin*1.3f), ImGuiChildFlags_Borders, ImGuiWindowFlags_AlwaysUseWindowPadding);
                 add_child_label(ImGui::GetCursorScreenPos(), "ESP", curtab);
 
                 imgui_checkbox_col(xorstr("Name"), &vars::settings::visuals::name, vars::settings::visuals::name_col, row_width);
@@ -562,18 +637,18 @@ void draw_menu(IDirect3DDevice9* device) {
                 ImGui::SetCursorPos(ImVec2(vars::styles::margin * 4, vars::styles::margin * 4 + check_size));
                 ImVec2 img_pos = ImGui::GetCursorScreenPos();
                 ImVec2 img_size = ImVec2(row_width - vars::styles::margin * 8, row_height - vars::styles::margin * 8 - check_size);
-                imgui_drawimage(device, visPreview, 474206, img_size);
+                imgui_drawimage(device, visPreview, visPreviewSize, img_size);
                 display_vis_preview(ImVec2(img_pos.x, img_pos.y - check_size), ImVec2(img_size.x, img_size.y + check_size));
                 
                 ImGui::EndChild();
 
                 ImGui::SetCursorPos(ImVec2(row_width*2 + vars::styles::margin*2, maintab_h));
 
-                ImGui::BeginChild(xorstr("vis_sect_4"), ImVec2(row_width, vis_small_h*2.f), ImGuiChildFlags_Borders, ImGuiWindowFlags_AlwaysUseWindowPadding);
+                ImGui::BeginChild(xorstr("vis_sect_4"), ImVec2(row_width, vis_small_h*2.5f), ImGuiChildFlags_Borders, ImGuiWindowFlags_AlwaysUseWindowPadding);
                 add_child_label(ImGui::GetCursorScreenPos(), "MODEL", curtab);
                 
                 imgui_checkbox_col(xorstr("Visible chams"), &vars::settings::visuals::chams_vis, vars::settings::visuals::chams_vis_col, row_width);
-                const char* chams_types[] = { "Flat", "Metal", "Glass", "Wireframe", "Glow"};
+                
                 ImGui::Combo(xorstr("Type"), &vars::settings::visuals::chams_vis_type, chams_types, 5, -1, checkboxSize[0]);
 
                 ImGui::Spacing();
@@ -581,11 +656,15 @@ void draw_menu(IDirect3DDevice9* device) {
                 imgui_checkbox_col(xorstr("Invisible chams"), &vars::settings::visuals::chams_invis, vars::settings::visuals::chams_invis_col, row_width);
                 
                 ImGui::Combo(xorstr("Type##"), &vars::settings::visuals::chams_invis_type, chams_types, 5, -1, checkboxSize[0]);
+                
+                ImGui::Spacing();
+
+                ImGui::CheckboxSized(xorstr("Draw original model"), &vars::settings::visuals::enemy_chams_o, ImVec2(checkboxSize[0], check_size));
 
                 ImGui::EndChild();
 
 
-                ImGui::SetCursorPos(ImVec2(row_width * 2 + vars::styles::margin * 2, maintab_h + vis_small_h * 2.f + vars::styles::margin*2.f));
+                ImGui::SetCursorPos(ImVec2(row_width * 2 + vars::styles::margin * 2, maintab_h + vis_small_h * 2.5f + vars::styles::margin*1.5f));
 
                 ImGui::BeginChild(xorstr("vis_sect_5"), ImVec2(row_width, vis_small_h * 2.f), ImGuiChildFlags_Borders, ImGuiWindowFlags_AlwaysUseWindowPadding);
                 add_child_label(ImGui::GetCursorScreenPos(), "BACKTRACK", curtab);
@@ -599,13 +678,12 @@ void draw_menu(IDirect3DDevice9* device) {
                 imgui_checkbox_col(xorstr("Invisible chams##"), &vars::settings::visuals::chams_backtrack_invis, vars::settings::visuals::chams_backtrack_invis_col, row_width);
 
                 ImGui::Combo(xorstr("Type##2"), &vars::settings::visuals::chams_backtrack_invis_type, chams_types, 5, -1, checkboxSize[0]);
-
+                
                 ImGui::EndChild();
 
+                ImGui::SetCursorPos(ImVec2(row_width * 2 + vars::styles::margin * 2, maintab_h + vis_small_h * 4.5f + vars::styles::margin * 3.f));
 
-                ImGui::SetCursorPos(ImVec2(row_width * 2 + vars::styles::margin * 2, maintab_h + vis_small_h * 4.f + vars::styles::margin * 4.f));
-
-                ImGui::BeginChild(xorstr("vis_sect_6"), ImVec2(row_width, vis_small_h * 2.f - vars::styles::margin), ImGuiChildFlags_Borders, ImGuiWindowFlags_AlwaysUseWindowPadding);
+                ImGui::BeginChild(xorstr("vis_sect_6"), ImVec2(row_width, vis_small_h * 2.f - vars::styles::margin*3.5f), ImGuiChildFlags_Borders, ImGuiWindowFlags_AlwaysUseWindowPadding);
                 add_child_label(ImGui::GetCursorScreenPos(), "EXTRA", curtab);
 
                 imgui_checkbox_col(xorstr("Glow"), &vars::settings::visuals::glow, vars::settings::visuals::glow_col, row_width);
@@ -616,9 +694,93 @@ void draw_menu(IDirect3DDevice9* device) {
             }
             if (ImGui::BeginTabItem(xorstr("Entity"))) {
 
+                ImGui::SetCursorPosY(maintab_h);
+
+                ImGui::BeginChild(xorstr("vis_sect_1"), ImVec2(row_width, vis_small_h * 2), ImGuiChildFlags_Borders, ImGuiWindowFlags_AlwaysUseWindowPadding);
+                add_child_label(ImGui::GetCursorScreenPos(), "GENERAL", curtab);
+
+                ImGui::CheckboxSized(xorstr("Enabled"), &vars::settings::visuals::ent_enabled, ImVec2(checkboxSize[0], check_size));
+                ImGui::SliderInt(xorstr("Draw distance"), &vars::settings::visuals::ent_distance, 0, 100000, "%d m", ImGuiSliderFlags_FixedWidth | ImGuiSliderFlags_AlwaysClamp, checkboxSize[0]);
+
+                ImGui::EndChild();
+
+                ImGui::SetCursorPosY(ImGui::GetCursorPosY() + vars::styles::margin);
+
+                ImGui::BeginChild(xorstr("vis_sect_2"), ImVec2(row_width, row_height - vis_small_h * 2 - vars::styles::margin * 1.3f), ImGuiChildFlags_Borders, ImGuiWindowFlags_AlwaysUseWindowPadding);
+                add_child_label(ImGui::GetCursorScreenPos(), "ESP", curtab);
+
+                imgui_checkbox_col(xorstr("Name"), &vars::settings::visuals::ent_name, vars::settings::visuals::ent_name_col, row_width);
+                imgui_checkbox_col(xorstr("Box"), &vars::settings::visuals::ent_box, vars::settings::visuals::ent_box_col, row_width);
+                imgui_checkbox_col(xorstr("Health"), &vars::settings::visuals::ent_health, vars::settings::visuals::ent_health_col, row_width);
+                if (vars::settings::visuals::ent_health) {
+                    ImGui::CheckboxSized(xorstr("Health Text"), &vars::settings::visuals::ent_health_text, ImVec2(checkboxSize[0], check_size));
+                    ImGui::CheckboxSized(xorstr("Health Bar"), &vars::settings::visuals::ent_health_bar, ImVec2(checkboxSize[0], check_size));
+                }
+                ImGui::EndChild();
+
+                ImGui::SetCursorPos(ImVec2(row_width + vars::styles::margin, maintab_h));
+
+                ImGui::BeginChild(xorstr("vis_sect_3"), ImVec2(row_width, row_height), ImGuiChildFlags_Borders, ImGuiWindowFlags_AlwaysUseWindowPadding);
+                add_child_label(ImGui::GetCursorScreenPos(), "PREVIEW", curtab);
+                ImGui::SetCursorPos(ImVec2(vars::styles::margin * 4, vars::styles::margin * 4 + row_height * 0.25f));
+                ImVec2 img_pos = ImGui::GetCursorScreenPos();
+                ImVec2 img_size = ImVec2(row_width - vars::styles::margin * 8, row_height*0.5f - vars::styles::margin * 8 - check_size);
+                imgui_drawimage(device, visPreviewEnt, visPreviewEntSize, img_size);
+                display_vis_preview_ent(ImVec2(img_pos.x, img_pos.y - check_size), ImVec2(img_size.x, img_size.y + check_size));
+
+                ImGui::EndChild();
+
+                ImGui::SetCursorPos(ImVec2(row_width * 2 + vars::styles::margin * 2, maintab_h));
+
+                ImGui::BeginChild(xorstr("vis_sect_4"), ImVec2(row_width, vis_small_h * 4.f + vars::styles::margin * 2), ImGuiChildFlags_Borders, ImGuiWindowFlags_AlwaysUseWindowPadding);
+                add_child_label(ImGui::GetCursorScreenPos(), "MODEL", curtab);
+
+                imgui_checkbox_col(xorstr("Visible chams"), &vars::settings::visuals::ent_chams_vis, vars::settings::visuals::ent_chams_vis_col, row_width);
+                const char* chams_types[] = { "Flat", "Metal", "Glass", "Wireframe", "Glow" };
+                ImGui::Combo(xorstr("Type"), &vars::settings::visuals::ent_chams_vis_type, chams_types, 5, -1, checkboxSize[0]);
+
+                ImGui::Spacing();
+
+                imgui_checkbox_col(xorstr("Invisible chams"), &vars::settings::visuals::ent_chams_invis, vars::settings::visuals::ent_chams_invis_col, row_width);
+
+                ImGui::Combo(xorstr("Type##"), &vars::settings::visuals::ent_chams_invis_type, chams_types, 5, -1, checkboxSize[0]);
+                
+                ImGui::Spacing();
+
+                ImGui::CheckboxSized(xorstr("Draw original model"), &vars::settings::visuals::ent_chams_o, ImVec2(checkboxSize[0], check_size));
+
+                ImGui::EndChild();
+
+                ImGui::SetCursorPos(ImVec2(row_width * 2 + vars::styles::margin * 2, maintab_h + vis_small_h * 4.f + vars::styles::margin * 4.f));
+
+                ImGui::BeginChild(xorstr("vis_sect_6"), ImVec2(row_width, vis_small_h * 2.f - vars::styles::margin), ImGuiChildFlags_Borders, ImGuiWindowFlags_AlwaysUseWindowPadding);
+                add_child_label(ImGui::GetCursorScreenPos(), "EXTRA", curtab);
+
+                imgui_checkbox_col(xorstr("Glow"), &vars::settings::visuals::ent_glow, vars::settings::visuals::ent_glow_col, row_width);
+
+                ImGui::EndChild();
+
                 ImGui::EndTabItem();
             }
             if (ImGui::BeginTabItem(xorstr("World"))) {
+
+                ImGui::SetCursorPosY(maintab_h);
+
+                ImGui::BeginChild(xorstr("vis_sect_1"), ImVec2(row_width, vis_small_h * 2), ImGuiChildFlags_Borders, ImGuiWindowFlags_AlwaysUseWindowPadding);
+                add_child_label(ImGui::GetCursorScreenPos(), "GENERAL", curtab);
+
+                imgui_checkbox_col(xorstr("World color"), &vars::settings::visuals::enable_colormod, vars::settings::visuals::colormod_col, row_width);
+                
+                ImGui::CheckboxSized(xorstr("Custom sky"), &vars::settings::visuals::enable_skybox, ImVec2(checkboxSize[0], check_size));
+                
+                if (vars::settings::visuals::enable_skybox) {
+                    ImGui::Combo(xorstr("Skybox"), &vars::settings::visuals::skybox, skyboxes, 5, -1, checkboxSize[0]);
+                    ImGui::Spacing();
+                }
+
+                ImGui::CheckboxSized(xorstr("Fullbright"), &vars::settings::visuals::fullbright, ImVec2(checkboxSize[0], check_size));
+
+                ImGui::EndChild();
 
                 ImGui::EndTabItem();
             }
@@ -632,24 +794,61 @@ void draw_menu(IDirect3DDevice9* device) {
         
         ImGui::SetCursorPosY(vars::styles::margin);
 
-        ImGui::BeginChild(xorstr("misc_sect_1"), ImVec2(row_width, row_height + maintab_h - vars::styles::margin), ImGuiChildFlags_Borders, ImGuiWindowFlags_AlwaysUseWindowPadding);
+        ImGui::BeginChild(xorstr("misc_sect_1"), ImVec2(row_width, vis_small_h*2 + maintab_h - vars::styles::margin), ImGuiChildFlags_Borders, ImGuiWindowFlags_AlwaysUseWindowPadding);
         add_child_label(ImGui::GetCursorScreenPos(), "GENERAL", curtab);
+
+        imgui_checkbox_bind(ICON_FA_COG "##1", "Third person", &vars::settings::misc::thirdperson, &vars::settings::misc::thirdperson_bind, row_width);
+        if (vars::settings::misc::thirdperson) {
+            ImGui::SliderInt(xorstr("Distance"), &vars::settings::misc::thirdperson_distance, 0, 1000, "%d m", ImGuiSliderFlags_FixedWidth | ImGuiSliderFlags_AlwaysClamp, checkboxSize[0]);
+        }
+        imgui_checkbox_bind(ICON_FA_COG "##2", "Auto peek", &vars::settings::misc::autopeek, &vars::settings::misc::autopeek_bind, row_width);
+        imgui_checkbox_bind(ICON_FA_COG "##3", "Free camera", &vars::settings::misc::freecam, &vars::settings::misc::freecam_bind, row_width);
+        if (vars::settings::misc::freecam) {
+            ImGui::SliderInt(xorstr("Speed"), &vars::settings::misc::freecam_distance, 0, 100, "%d m/s", ImGuiSliderFlags_FixedWidth | ImGuiSliderFlags_AlwaysClamp, checkboxSize[0]);
+        }
+        ImGui::EndChild();
+
+        ImGui::SetCursorPos(ImVec2(0.f,vis_small_h*2 + maintab_h + vars::styles::margin*1.5f));
+
+        ImGui::BeginChild(xorstr("misc_sect_2"), ImVec2(row_width, vis_small_h + maintab_h - vars::styles::margin), ImGuiChildFlags_Borders, ImGuiWindowFlags_AlwaysUseWindowPadding);
+        add_child_label(ImGui::GetCursorScreenPos(), "HITSOUND", curtab);
+        const char* hit_sounds[] = { "Metal", "Bell", "Phonk", "Beep"};
+        ImGui::Combo(xorstr("Hit Sound"), &vars::settings::misc::hitsound, hit_sounds, 4, -1, checkboxSize[0]);
+        ImGui::Combo(xorstr("Kill Sound"), &vars::settings::misc::killsound, hit_sounds, 4, -1, checkboxSize[0]);
 
         ImGui::EndChild();
 
-        ImGui::SameLine();
-        ImGui::SetCursorPosX(row_width + vars::styles::margin);
+        ImGui::SetCursorPos(ImVec2(0.f, vis_small_h*3 + maintab_h + vars::styles::margin * 6.5f));
 
-        ImGui::BeginChild(xorstr("misc_sect_2"), ImVec2(row_width, row_height+maintab_h-vars::styles::margin), ImGuiChildFlags_Borders, ImGuiWindowFlags_AlwaysUseWindowPadding);
+        ImGui::BeginChild(xorstr("misc_sect_3"), ImVec2(row_width, vis_small_h*2 + maintab_h - vars::styles::margin), ImGuiChildFlags_Borders, ImGuiWindowFlags_AlwaysUseWindowPadding);
+        add_child_label(ImGui::GetCursorScreenPos(), "MOVEMENT", curtab);
+
+        ImGui::CheckboxSized(xorstr("Bunny hop"), &vars::settings::misc::bhop, ImVec2(checkboxSize[0], check_size));
+        ImGui::CheckboxSized(xorstr("Auto strafe"), &vars::settings::misc::autostrafe, ImVec2(checkboxSize[0], check_size));
+        if (vars::settings::misc::autostrafe) {
+            const char* strafe_types[] = { "Legit", "Rage", "Multi-Directional"};
+            ImGui::Combo(xorstr("Strafe"), &vars::settings::misc::autostrafe_type, strafe_types, 3, -1, checkboxSize[0]);
+        }
+
+        ImGui::EndChild();
+
+        ImGui::SetCursorPos(ImVec2(row_width + vars::styles::margin, maintab_h - vars::styles::margin*3.5f));
+
+        ImGui::BeginChild(xorstr("misc_sect_4"), ImVec2(row_width, row_height+maintab_h-vars::styles::margin), ImGuiChildFlags_Borders, ImGuiWindowFlags_AlwaysUseWindowPadding);
         add_child_label(ImGui::GetCursorScreenPos(), "EXTRA", curtab);
+
+       
 
         ImGui::EndChild();
 
         ImGui::SameLine();
         ImGui::SetCursorPosX(row_width*2 + vars::styles::margin*2);
 
-        ImGui::BeginChild(xorstr("misc_sect_3"), ImVec2(row_width, row_height + maintab_h - vars::styles::margin), ImGuiChildFlags_Borders, ImGuiWindowFlags_AlwaysUseWindowPadding);
+        ImGui::BeginChild(xorstr("misc_sect_5"), ImVec2(row_width, row_height + maintab_h - vars::styles::margin), ImGuiChildFlags_Borders, ImGuiWindowFlags_AlwaysUseWindowPadding);
         add_child_label(ImGui::GetCursorScreenPos(), "MENU", curtab);
+
+        const char* dpi_scales[] = { "85%", "100%", "125%", "150%", "175%", "200%"};
+        ImGui::Combo(xorstr("DPI Scale"), &vars::settings::misc::dpi_scale, dpi_scales, 6, -1, checkboxSize[0]);
 
         ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.f);
 
@@ -668,6 +867,131 @@ void draw_menu(IDirect3DDevice9* device) {
         ImGui::ColorEdit4(xorstr("Active background"), vars::colors::frame_bg_active, ImGuiColorEditFlags_NoInputs);
 
         ImGui::PopStyleVar();
+
+        ImGui::EndChild();
+
+        draw_over_items();
+    }
+    else if (curtab == 4) {
+        ImGui::SetCursorPosY(vars::styles::margin);
+
+        ImGui::BeginChild(xorstr("lua_sect_1"), ImVec2(row_width, row_height + maintab_h - vars::styles::margin), ImGuiChildFlags_Borders, ImGuiWindowFlags_AlwaysUseWindowPadding);
+        add_child_label(ImGui::GetCursorScreenPos(), "FILES", curtab);
+
+        const char* scripts[] = { "script.lua", "truckachtech.lua", "exploits.lua", "autofarm.lua" };
+
+        ImGui::BeginListBox("##lua_list", ImVec2(-FLT_MIN, row_height + maintab_h - vars::styles::margin * 4));
+
+        for (size_t i = 0; i < sizeof(selected_script); i++)
+        {
+            if (ImGui::Selectable(scripts[i]))
+                selected_script = i;
+        }
+        ImGui::Button(xorstr("Open folder"));
+
+        ImGui::EndListBox();
+
+        ImGui::EndChild();
+
+        ImGui::SameLine();
+        ImGui::SetCursorPosX(row_width+vars::styles::margin);
+
+        ImGui::BeginChild(xorstr("lua_sect_2"), ImVec2(row_width*2, row_height + maintab_h - vars::styles::margin), ImGuiChildFlags_Borders, ImGuiWindowFlags_AlwaysUseWindowPadding);
+        add_child_label(ImGui::GetCursorScreenPos(), "EDITOR", curtab);
+
+        ImGui::Text(scripts[selected_script]);
+        
+        // LUA EDITOR HERE
+
+        lua_editor.IsOverwrite() ? "Ovr" : "Ins",
+        lua_editor.CanUndo() ? "*" : " ",
+
+        lua_editor.Render("Lua Editor",ImVec2(row_width*2-vars::styles::margin * 2, row_height + maintab_h - vars::styles::margin*6 - 32.f));
+
+        ImGui::Button(xorstr("Run script"), ImVec2(row_width, vars::styles::margin*2+16.f));
+
+        ImGui::EndChild();
+
+        draw_over_items();
+    }
+    else if (curtab == 5) {
+        ImGui::SetCursorPosY(vars::styles::margin);
+
+        ImGui::BeginChild(xorstr("skin_sect_1"), ImVec2(row_width, row_height + maintab_h - vars::styles::margin), ImGuiChildFlags_Borders, ImGuiWindowFlags_AlwaysUseWindowPadding);
+        add_child_label(ImGui::GetCursorScreenPos(), "SKINS", curtab);
+
+        const char* skins[] = { "Cool skin", "Rare skin", "Common skin", "Worst skin" };
+
+        ImGui::InputText("Search", vars::settings::skins::skin_search, sizeof(vars::settings::skins::skin_search));
+
+        ImGui::BeginListBox("##skin_list", ImVec2(-FLT_MIN, row_height + maintab_h - vars::styles::margin * 4 - check_size*2));
+
+        std::string skin_search_str(vars::settings::skins::skin_search);
+        std::transform(skin_search_str.begin(), skin_search_str.end(), skin_search_str.begin(), ::tolower);
+        for (size_t i = 0; i < sizeof(vars::settings::skins::selected_skin); i++)
+        {
+            std::string cur_skin(skins[i]);
+            std::transform(cur_skin.begin(), cur_skin.end(), cur_skin.begin(), ::tolower);
+            
+            if ((skin_search_str.empty() || cur_skin.find(skin_search_str) != std::string::npos) && ImGui::Selectable(skins[i]))
+                vars::settings::skins::selected_skin = i;
+        }
+
+        ImGui::EndListBox();
+
+        ImGui::EndChild();
+
+        ImGui::SameLine();
+        ImGui::SetCursorPosX(row_width + vars::styles::margin);
+
+        ImGui::BeginChild(xorstr("skin_sect_2"), ImVec2(row_width, row_height + maintab_h - vars::styles::margin), ImGuiChildFlags_Borders, ImGuiWindowFlags_AlwaysUseWindowPadding);
+        add_child_label(ImGui::GetCursorScreenPos(), "PAINT KIT", curtab);
+
+        const char* paints[] = { "Paint 1", "Paint 2", "Paint 3", "Paint 4" };
+
+        ImGui::InputText("Search", vars::settings::skins::paint_search, sizeof(vars::settings::skins::paint_search));
+
+        ImGui::BeginListBox("##paint_list", ImVec2(-FLT_MIN, row_height + maintab_h - vars::styles::margin * 4 - check_size * 2));
+
+        std::string paint_search_str(vars::settings::skins::paint_search);
+        std::transform(paint_search_str.begin(), paint_search_str.end(), paint_search_str.begin(), ::tolower);
+        for (size_t i = 0; i < sizeof(vars::settings::skins::selected_paint); i++)
+        {
+            std::string cur_paint(paints[i]);
+            std::transform(cur_paint.begin(), cur_paint.end(), cur_paint.begin(), ::tolower);
+
+            if ((paint_search_str.empty() || cur_paint.find(paint_search_str) != std::string::npos) && ImGui::Selectable(paints[i]))
+                vars::settings::skins::selected_paint = i;
+        }
+
+        ImGui::EndListBox();
+
+        ImGui::EndChild();
+
+        ImGui::SameLine();
+        ImGui::SetCursorPosX(row_width*2 + vars::styles::margin*2);
+
+        ImGui::BeginChild(xorstr("skin_sect_3"), ImVec2(row_width, row_height + maintab_h - vars::styles::margin), ImGuiChildFlags_Borders, ImGuiWindowFlags_AlwaysUseWindowPadding);
+        add_child_label(ImGui::GetCursorScreenPos(), "QUALITY", curtab);
+
+        const char* wear_types[] = { "StarTrek", "Good", "Well-Worn", "Battle-Hardened" };
+
+        ImGui::InputText("Search", vars::settings::skins::wear_search, sizeof(vars::settings::skins::wear_search));
+
+        ImGui::BeginListBox("##wear_list", ImVec2(-FLT_MIN, row_height + maintab_h - vars::styles::margin * 4 - check_size * 2));
+
+        std::string wear_search_str(vars::settings::skins::wear_search);
+        std::transform(wear_search_str.begin(), wear_search_str.end(), wear_search_str.begin(), ::tolower);
+        for (size_t i = 0; i < sizeof(vars::settings::skins::selected_paint); i++)
+        {
+            std::string cur_wear(wear_types[i]);
+            std::transform(cur_wear.begin(), cur_wear.end(), cur_wear.begin(), ::tolower);
+
+            if ((wear_search_str.empty() || cur_wear.find(wear_search_str) != std::string::npos) && ImGui::Selectable(wear_types[i]))
+                vars::settings::skins::selected_paint = i;
+        }
+
+        ImGui::EndListBox();
 
         ImGui::EndChild();
 

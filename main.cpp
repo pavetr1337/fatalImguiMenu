@@ -26,6 +26,14 @@ void CleanupDeviceD3D();
 void ResetDevice();
 LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
+// LUA TAB
+void init_lua_editor() {
+
+    auto lang = TextEditor::LanguageDefinition::Lua();
+
+    lua_editor.SetLanguageDefinition(lang);
+}
+
 // Main code
 int main(int, char**)
 {
@@ -63,6 +71,7 @@ int main(int, char**)
     ImGui_ImplDX9_Init(g_pd3dDevice);
 
     load_fonts();
+    init_lua_editor();
 
     // Load Fonts
     // - If no fonts are loaded, dear imgui will use the default font. You can also load multiple fonts and use ImGui::PushFont()/PopFont() to select them.

@@ -37,7 +37,7 @@
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v143</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
-    <CharacterSet>Unicode</CharacterSet>
+    <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
@@ -151,9 +151,11 @@
     <ClCompile Include="imgui\imgui_stdlib.cpp" />
     <ClCompile Include="imgui\imgui_tables.cpp" />
     <ClCompile Include="imgui\imgui_widgets.cpp" />
+    <ClCompile Include="img\vis_preview_ent.hpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="menu.cpp" />
-    <ClCompile Include="vis_preview.hpp" />
+    <ClCompile Include="text_editor\TextEditor.cpp" />
+    <ClCompile Include="img\vis_preview.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="fonts\FontIcon.h" />
@@ -171,6 +173,7 @@
     <ClInclude Include="imgui\imstb_truetype.h" />
     <ClInclude Include="menu.h" />
     <ClInclude Include="texture.hpp" />
+    <ClInclude Include="text_editor\TextEditor.h" />
     <ClInclude Include="vars.h" />
     <ClInclude Include="xorstr.hpp" />
   </ItemGroup>

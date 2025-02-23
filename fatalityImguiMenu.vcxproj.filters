@@ -15,7 +15,9 @@
     <ClCompile Include="fonts\JosefinSansRegular.cpp" />
     <ClCompile Include="fonts\JosefinSansBold.cpp" />
     <ClCompile Include="fonts\FontIcon.cpp" />
-    <ClCompile Include="vis_preview.hpp" />
+    <ClCompile Include="img\vis_preview.hpp" />
+    <ClCompile Include="text_editor\TextEditor.cpp" />
+    <ClCompile Include="img\vis_preview_ent.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="imgui\imconfig.h" />
@@ -35,5 +37,6 @@
     <ClInclude Include="fonts\FontIcon.h" />
     <ClInclude Include="xorstr.hpp" />
     <ClInclude Include="texture.hpp" />
+    <ClInclude Include="text_editor\TextEditor.h" />
   </ItemGroup>
 </Project>

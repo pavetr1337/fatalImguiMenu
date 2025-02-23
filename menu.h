@@ -10,6 +10,8 @@
 #include "fonts/JosefinSansRegular.h"
 #include "fonts/JosefinSansBold.h"
 #include "fonts/FontIcon.h"
+#include "text_editor/TextEditor.h"
 
 void draw_menu(IDirect3DDevice9* device);
 void load_fonts();
+static TextEditor lua_editor;
