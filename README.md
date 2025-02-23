@@ -12,6 +12,7 @@
 - https://github.com/ocornut/imgui
 - https://github.com/pa1n-dev/nixware_x64
 - https://github.com/JustasMasiulis/xorstr
+- https://github.com/BalazsJako/ImGuiColorTextEdit
 
 ## Thanks to:
 - sainer2k - help with references
