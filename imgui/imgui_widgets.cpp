@@ -46,6 +46,9 @@ Index of this file:
 
 // System includes
 #include <stdint.h>     // intptr_t
+#include <iostream>
+#include <list>
+#include <map>
 
 //-------------------------------------------------------------------------
 // Warnings
@@ -719,7 +722,9 @@ bool ImGui::ButtonBehavior(const ImRect& bb, ImGuiID id, bool* out_hovered, bool
     return pressed;
 }
 
-bool ImGui::ButtonEx(const char* label, const ImVec2& size_arg, ImGuiButtonFlags flags, ImGuiCol_ txt_col)
+std::map<ImGuiID,float> button_anim_list;
+
+bool ImGui::ButtonEx(const char* label, const ImVec2& size_arg, ImGuiButtonFlags flags, ImGuiCol txt_col)
 {
     ImGuiWindow* window = GetCurrentWindow();
     if (window->SkipItems)
@@ -743,24 +748,40 @@ bool ImGui::ButtonEx(const char* label, const ImVec2& size_arg, ImGuiButtonFlags
     bool hovered, held;
     bool pressed = ButtonBehavior(bb, id, &hovered, &held, flags);
 
-    ImGuiCol_ out_col;
+    // ANIMATION
+    
+    const float animation_speed = 0.1f; // Speed of the color transition (smaller = slower)
+    ImVec4 txtStart = ImGui::GetStyleColorVec4(txt_col);
+    ImVec4 txtEnd = ImGui::GetStyleColorVec4(ImGuiCol_Text);
+
+    ImVec4 bgStart = ImGui::GetStyleColorVec4(ImGuiCol_Button);
+    ImVec4 bgEnd = ImGui::GetStyleColorVec4(ImGuiCol_ButtonHovered);
+
     if (hovered) {
-        out_col = ImGuiCol_Text;
+        button_anim_list[id] = ImMin(button_anim_list[id] + animation_speed, 1.0f);
     }
     else {
-        out_col = txt_col;
+        button_anim_list[id] = ImMax(button_anim_list[id] - animation_speed, 0.0f);
     }
 
+    ImVec4 animatedText = ImLerp(txtStart, txtEnd, button_anim_list[id]);
+    ImVec4 animatedBG = ImLerp(bgStart, bgEnd, button_anim_list[id]);
+
+    ImU32 col = (held && hovered) ? GetColorU32(ImGuiCol_ButtonActive) : GetColorU32(animatedBG);
+
+    //std::cout << animation_t << std::endl;
+
     // Render
-    const ImU32 col = GetColorU32((held && hovered) ? ImGuiCol_ButtonActive : hovered ? ImGuiCol_ButtonHovered : ImGuiCol_Button);
+    //const ImU32 col = GetColorU32((held && hovered) ? ImGuiCol_ButtonActive : hovered ? ImGuiCol_ButtonHovered : ImGuiCol_Button);
     RenderNavCursor(bb, id);
     RenderFrame(bb.Min, bb.Max, col, true, style.FrameRounding);
 
     if (g.LogEnabled)
         LogSetNextTextDecoration("[", "]");
 
-    RenderTextClipped(bb.Min + style.FramePadding, bb.Max - style.FramePadding, label, NULL, &label_size, style.ButtonTextAlign, &bb, out_col);
-
+    ImGui::PushStyleColor(ImGuiCol_Text, animatedText);
+    RenderTextClipped(bb.Min + style.FramePadding, bb.Max - style.FramePadding, label, NULL, &label_size, style.ButtonTextAlign, &bb, ImGuiCol_Text);
+    ImGui::PopStyleColor();
     // Automatically close popups
     //if (pressed && !(flags & ImGuiButtonFlags_DontClosePopups) && (window->Flags & ImGuiWindowFlags_Popup))
     //    CloseCurrentPopup();
@@ -769,7 +790,7 @@ bool ImGui::ButtonEx(const char* label, const ImVec2& size_arg, ImGuiButtonFlags
     return pressed;
 }
 
-bool ImGui::Button(const char* label, const ImVec2& size_arg, ImGuiCol_ col)
+bool ImGui::Button(const char* label, const ImVec2& size_arg, ImGuiCol col)
 {
     return ImGui::ButtonEx(label, size_arg, ImGuiButtonFlags_None, col);
 }

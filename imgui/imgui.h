@@ -3627,7 +3627,7 @@ namespace ImGui
     static inline void  PushAllowKeyboardFocus(bool tab_stop)                   { PushItemFlag(ImGuiItemFlags_NoTabStop, !tab_stop); }
     static inline void  PopAllowKeyboardFocus()                                 { PopItemFlag(); }
 
-    IMGUI_API bool          Button(const char* label, const ImVec2& size = ImVec2(0, 0), ImGuiCol_ col = ImGuiCol_TextDisabled);   // button
+    IMGUI_API bool          Button(const char* label, const ImVec2& size = ImVec2(0, 0), ImGuiCol col = ImGuiCol_TextDisabled);   // button
 
 
     // Some of the older obsolete names along with their replacement (commented out so they are not reported in IDE)
