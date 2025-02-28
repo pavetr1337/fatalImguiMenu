@@ -139,6 +139,8 @@ static bool     InputTextFilterCharacter(ImGuiContext* ctx, unsigned int* p_char
 static int      InputTextCalcTextLenAndLineCount(const char* text_begin, const char** out_text_end);
 static ImVec2   InputTextCalcTextSize(ImGuiContext* ctx, const char* text_begin, const char* text_end, const char** remaining = NULL, ImVec2* out_offset = NULL, bool stop_on_new_line = false);
 
+const float animation_speed = 0.1f; // Speed of the transitions (smaller = slower)
+
 //-------------------------------------------------------------------------
 // [SECTION] Widgets: Text, etc.
 //-------------------------------------------------------------------------
@@ -722,7 +724,7 @@ bool ImGui::ButtonBehavior(const ImRect& bb, ImGuiID id, bool* out_hovered, bool
     return pressed;
 }
 
-std::map<ImGuiID,float> button_anim_list;
+std::map<ImGuiID,float> anim_list;
 
 bool ImGui::ButtonEx(const char* label, const ImVec2& size_arg, ImGuiButtonFlags flags, ImGuiCol txt_col)
 {
@@ -750,26 +752,23 @@ bool ImGui::ButtonEx(const char* label, const ImVec2& size_arg, ImGuiButtonFlags
 
     // ANIMATION
     
-    const float animation_speed = 0.1f; // Speed of the color transition (smaller = slower)
     ImVec4 txtStart = ImGui::GetStyleColorVec4(txt_col);
     ImVec4 txtEnd = ImGui::GetStyleColorVec4(ImGuiCol_Text);
 
     ImVec4 bgStart = ImGui::GetStyleColorVec4(ImGuiCol_Button);
     ImVec4 bgEnd = ImGui::GetStyleColorVec4(ImGuiCol_ButtonHovered);
-
+    
     if (hovered) {
-        button_anim_list[id] = ImMin(button_anim_list[id] + animation_speed, 1.0f);
+        anim_list[id] = ImMin(anim_list[id] + animation_speed, 1.0f);
     }
     else {
-        button_anim_list[id] = ImMax(button_anim_list[id] - animation_speed, 0.0f);
+        anim_list[id] = ImMax(anim_list[id] - animation_speed, 0.0f);
     }
 
-    ImVec4 animatedText = ImLerp(txtStart, txtEnd, button_anim_list[id]);
-    ImVec4 animatedBG = ImLerp(bgStart, bgEnd, button_anim_list[id]);
+    ImVec4 animatedText = ImLerp(txtStart, txtEnd, anim_list[id]);
+    ImVec4 animatedBG = ImLerp(bgStart, bgEnd, anim_list[id]);
 
     ImU32 col = (held && hovered) ? GetColorU32(ImGuiCol_ButtonActive) : GetColorU32(animatedBG);
-
-    //std::cout << animation_t << std::endl;
 
     // Render
     //const ImU32 col = GetColorU32((held && hovered) ? ImGuiCol_ButtonActive : hovered ? ImGuiCol_ButtonHovered : ImGuiCol_Button);
@@ -1218,10 +1217,31 @@ bool ImGui::Checkbox(const char* label, bool* v)
 
     const ImRect check_bb(pos, pos + ImVec2(square_sz, square_sz));
     const bool mixed_value = (g.LastItemData.ItemFlags & ImGuiItemFlags_MixedValue) != 0;
+
+    // ANIMATION
+
+    ImVec4 txtStart = ImGui::GetStyleColorVec4(ImGuiCol_TextDisabled);
+    ImVec4 txtEnd = ImGui::GetStyleColorVec4(ImGuiCol_Text);
+
+    ImVec4 bgStart = ImGui::GetStyleColorVec4(ImGuiCol_FrameBg);
+    ImVec4 bgEnd = ImGui::GetStyleColorVec4(ImGuiCol_FrameBgHovered);
+
+    if (hovered) {
+        anim_list[id] = ImMin(anim_list[id] + animation_speed, 1.0f);
+    }
+    else {
+        anim_list[id] = ImMax(anim_list[id] - animation_speed, 0.0f);
+    }
+
+    ImVec4 animatedText = ImLerp(txtStart, txtEnd, anim_list[id]);
+    ImVec4 animatedBG = ImLerp(bgStart, bgEnd, anim_list[id]);
+
+    ImU32 col = (held && hovered) ? GetColorU32(ImGuiCol_ButtonActive) : GetColorU32(animatedBG);
+
     if (is_visible)
     {
         RenderNavCursor(total_bb, id);
-        RenderFrame(check_bb.Min, check_bb.Max, GetColorU32((held && hovered) ? ImGuiCol_FrameBgActive : hovered ? ImGuiCol_FrameBgHovered : ImGuiCol_FrameBg), true, style.FrameRounding);
+        RenderFrame(check_bb.Min, check_bb.Max, col, true, style.FrameRounding);
         ImU32 check_col = GetColorU32(ImGuiCol_CheckMark);
         if (mixed_value)
         {
@@ -1239,8 +1259,11 @@ bool ImGui::Checkbox(const char* label, bool* v)
     const ImVec2 label_pos = ImVec2(check_bb.Max.x + style.ItemInnerSpacing.x, check_bb.Min.y + style.FramePadding.y);
     if (g.LogEnabled)
         LogRenderedText(&label_pos, mixed_value ? "[~]" : *v ? "[x]" : "[ ]");
-    if (is_visible && label_size.x > 0.0f)
+    if (is_visible && label_size.x > 0.0f) {
+        ImGui::PushStyleColor(ImGuiCol_Text, animatedText);
         RenderText(label_pos, label);
+        ImGui::PopStyleColor();
+    }
 
     IMGUI_TEST_ENGINE_ITEM_INFO(id, label, g.LastItemData.StatusFlags | ImGuiItemStatusFlags_Checkable | (*v ? ImGuiItemStatusFlags_Checked : 0));
     return pressed;
@@ -1293,10 +1316,31 @@ bool ImGui::CheckboxSized(const char* label, bool* v, ImVec2 size)
 
     const ImRect check_bb(pos, pos + ImVec2(square_sz, square_sz));
     const bool mixed_value = (g.LastItemData.ItemFlags & ImGuiItemFlags_MixedValue) != 0;
+
+    // ANIMATION
+
+    ImVec4 txtStart = ImGui::GetStyleColorVec4(ImGuiCol_TextDisabled);
+    ImVec4 txtEnd = ImGui::GetStyleColorVec4(ImGuiCol_Text);
+
+    ImVec4 bgStart = ImGui::GetStyleColorVec4(ImGuiCol_FrameBg);
+    ImVec4 bgEnd = ImGui::GetStyleColorVec4(ImGuiCol_FrameBgHovered);
+
+    if (hovered) {
+        anim_list[id] = ImMin(anim_list[id] + animation_speed, 1.0f);
+    }
+    else {
+        anim_list[id] = ImMax(anim_list[id] - animation_speed, 0.0f);
+    }
+
+    ImVec4 animatedText = ImLerp(txtStart, txtEnd, anim_list[id]);
+    ImVec4 animatedBG = ImLerp(bgStart, bgEnd, anim_list[id]);
+
+    ImU32 col = (held && hovered) ? GetColorU32(ImGuiCol_ButtonActive) : GetColorU32(animatedBG);
+
     if (is_visible)
     {
         RenderNavCursor(total_bb, id);
-        RenderFrame(pos+size-ImVec2(square_sz, square_sz), pos + size, GetColorU32((held && hovered) ? ImGuiCol_FrameBgActive : hovered ? ImGuiCol_FrameBgHovered : ImGuiCol_FrameBg), true, style.FrameRounding);
+        RenderFrame(pos+size-ImVec2(square_sz, square_sz), pos + size, col, true, style.FrameRounding);
         ImU32 check_col = GetColorU32(ImGuiCol_CheckMark);
         if (mixed_value)
         {
@@ -1314,8 +1358,11 @@ bool ImGui::CheckboxSized(const char* label, bool* v, ImVec2 size)
     const ImVec2 label_pos = ImVec2(check_bb.Min.x, check_bb.Min.y + style.FramePadding.y);
     if (g.LogEnabled)
         LogRenderedText(&label_pos, mixed_value ? "[~]" : *v ? "[x]" : "[ ]");
-    if (is_visible && label_size.x > 0.0f)
+    if (is_visible && label_size.x > 0.0f) {
+        ImGui::PushStyleColor(ImGuiCol_Text, animatedText);
         RenderText(label_pos, label);
+        ImGui::PopStyleColor();
+    }
 
     IMGUI_TEST_ENGINE_ITEM_INFO(id, label, g.LastItemData.StatusFlags | ImGuiItemStatusFlags_Checkable | (*v ? ImGuiItemStatusFlags_Checked : 0));
     return pressed;
@@ -1950,6 +1997,7 @@ bool ImGui::BeginCombo(const char* label, const char* preview_value, ImGuiComboF
     const float w = width > 0.f ? width : (flags & ImGuiComboFlags_NoPreview) ? arrow_size : ((flags & ImGuiComboFlags_WidthFitPreview) ? (arrow_size + preview_width + style.FramePadding.x * 2.0f) : CalcItemWidth());
     const ImRect bb(window->DC.CursorPos, window->DC.CursorPos + ImVec2(w, label_size.y + style.FramePadding.y * 2.0f));
     const ImRect total_bb(window->DC.CursorPos+ImVec2(width > 0.f ? width*0.5f : label_size.x, 0.f), bb.Max + ImVec2(width > 0.f ? width-bb.Max.x+bb.Min.x : label_size.x > 0.0f ? style.ItemInnerSpacing.x + label_size.x : 0.0f, 0.0f));
+    
     ItemSize(total_bb, style.FramePadding.y);
     if (!ItemAdd(total_bb, id, &bb))
         return false;
@@ -1965,8 +2013,28 @@ bool ImGui::BeginCombo(const char* label, const char* preview_value, ImGuiComboF
         popup_open = true;
     }
 
+    // ANIMATION
+
+    ImVec4 txtStart = ImGui::GetStyleColorVec4(ImGuiCol_TextDisabled);
+    ImVec4 txtEnd = ImGui::GetStyleColorVec4(ImGuiCol_Text);
+
+    ImVec4 bgStart = ImGui::GetStyleColorVec4(ImGuiCol_FrameBg);
+    ImVec4 bgEnd = ImGui::GetStyleColorVec4(ImGuiCol_FrameBgHovered);
+
+    if (hovered) {
+        anim_list[id] = ImMin(anim_list[id] + animation_speed, 1.0f);
+    }
+    else {
+        anim_list[id] = ImMax(anim_list[id] - animation_speed, 0.0f);
+    }
+
+    ImVec4 animatedText = ImLerp(txtStart, txtEnd, anim_list[id]);
+    ImVec4 animatedBG = ImLerp(bgStart, bgEnd, anim_list[id]);
+
+    ImU32 col = GetColorU32(animatedBG);
+
     // Render shape
-    const ImU32 frame_col = GetColorU32(hovered ? ImGuiCol_FrameBgHovered : ImGuiCol_FrameBg);
+    const ImU32 frame_col = col;
     const float value_x2 = ImMax(total_bb.Min.x, total_bb.Max.x - arrow_size);
     RenderNavCursor(total_bb, id);
     if (!(flags & ImGuiComboFlags_NoPreview))
@@ -1995,9 +2063,13 @@ bool ImGui::BeginCombo(const char* label, const char* preview_value, ImGuiComboF
         if (g.LogEnabled)
             LogSetNextTextDecoration("{", "}");
         RenderTextClipped(total_bb.Min + style.FramePadding, ImVec2(value_x2, total_bb.Max.y), preview_value, NULL, NULL);
+
     }
-    if (label_size.x > 0)
+    if (label_size.x > 0) {
+        ImGui::PushStyleColor(ImGuiCol_Text, animatedText);
         RenderText(ImVec2(bb.Min.x, bb.Min.y + style.FramePadding.y), label);
+        ImGui::PopStyleColor();
+    }
 
     if (!popup_open)
         return false;
@@ -2014,9 +2086,9 @@ bool ImGui::BeginComboPopup(ImGuiID popup_id, const ImRect& bb, ImGuiComboFlags 
         g.NextWindowData.ClearFlags();
         return false;
     }
-
     // Set popup size
     float w = bb.GetWidth();
+
     if (g.NextWindowData.Flags & ImGuiNextWindowDataFlags_HasSizeConstraint)
     {
         g.NextWindowData.SizeConstraintRect.Min.x = ImMax(g.NextWindowData.SizeConstraintRect.Min.x, w);
@@ -2058,6 +2130,7 @@ bool ImGui::BeginComboPopup(ImGuiID popup_id, const ImRect& bb, ImGuiComboFlags 
 
     // We don't use BeginPopupEx() solely because we have a custom name string, which we could make an argument to BeginPopupEx()
     ImGuiWindowFlags window_flags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_Popup | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoMove;
+    
     PushStyleVarX(ImGuiStyleVar_WindowPadding, g.Style.FramePadding.x); // Horizontally align ourselves with the framed text
     bool ret = Begin(name, NULL, window_flags);
     PopStyleVar();
@@ -3364,8 +3437,28 @@ bool ImGui::SliderScalar(const char* label, ImGuiDataType data_type, void* p_dat
         return TempInputScalar(frame_bb, id, label, data_type, p_data, format, clamp_enabled ? p_min : NULL, clamp_enabled ? p_max : NULL);
     }
 
+    // ANIMATION
+
+    ImVec4 txtStart = ImGui::GetStyleColorVec4(ImGuiCol_TextDisabled);
+    ImVec4 txtEnd = ImGui::GetStyleColorVec4(ImGuiCol_Text);
+
+    ImVec4 bgStart = ImGui::GetStyleColorVec4(ImGuiCol_FrameBg);
+    ImVec4 bgEnd = ImGui::GetStyleColorVec4(ImGuiCol_FrameBgHovered);
+
+    if (hovered) {
+        anim_list[id] = ImMin(anim_list[id] + animation_speed, 1.0f);
+    }
+    else {
+        anim_list[id] = ImMax(anim_list[id] - animation_speed, 0.0f);
+    }
+
+    ImVec4 animatedText = ImLerp(txtStart, txtEnd, anim_list[id]);
+    ImVec4 animatedBG = ImLerp(bgStart, bgEnd, anim_list[id]);
+
+    ImU32 frame_col = (g.ActiveId == id) ? GetColorU32(ImGuiCol_ButtonActive) : GetColorU32(animatedBG);
+
     // Draw frame
-    const ImU32 frame_col = GetColorU32(g.ActiveId == id ? ImGuiCol_FrameBgActive : hovered ? ImGuiCol_FrameBgHovered : ImGuiCol_FrameBg);
+    //const ImU32 frame_col = GetColorU32(g.ActiveId == id ? ImGuiCol_FrameBgActive : hovered ? ImGuiCol_FrameBgHovered : ImGuiCol_FrameBg);
     RenderNavCursor(frame_bb, id);
     RenderFrame(frame_bb.Min, frame_bb.Max, frame_col, true, g.Style.FrameRounding);
 
@@ -3374,6 +3467,11 @@ bool ImGui::SliderScalar(const char* label, ImGuiDataType data_type, void* p_dat
     const bool value_changed = SliderBehavior(frame_bb, id, data_type, p_data, p_min, p_max, format, flags, &grab_bb);
     if (value_changed)
         MarkItemEdited(id);
+
+
+    //anim_list[id] = ImMin(anim_list[id] + animation_speed * 0.3f, 1.0f);
+
+   // float animatedProg = ImLerp(frame_bb.Min.x, grab_bb.Max.x, anim_list[id]);
 
     // Render grab
     if (grab_bb.Max.x > grab_bb.Min.x)
@@ -3386,8 +3484,11 @@ bool ImGui::SliderScalar(const char* label, ImGuiDataType data_type, void* p_dat
         LogSetNextTextDecoration("{", "}");
     RenderTextClipped(frame_bb.Min, frame_bb.Max, value_buf, value_buf_end, NULL, ImVec2(0.5f, 0.5f));
 
-    if (label_size.x > 0.0f)
+    if (label_size.x > 0.0f) {
+        ImGui::PushStyleColor(ImGuiCol_Text, animatedText);
         RenderText(ImVec2(total_bb.Min.x, frame_bb.Min.y + style.FramePadding.y), label);
+        ImGui::PopStyleColor();
+    }
 
     IMGUI_TEST_ENGINE_ITEM_INFO(id, label, g.LastItemData.StatusFlags | (temp_input_allowed ? ImGuiItemStatusFlags_Inputable : 0));
     return value_changed;
@@ -7176,7 +7277,7 @@ bool ImGui::Selectable(const char* label, bool selected, ImGuiSelectableFlags fl
         if (highlighted || selected)
         {
             // Between 1.91.0 and 1.91.4 we made selected Selectable use an arbitrary lerp between _Header and _HeaderHovered. Removed that now. (#8106)
-            ImU32 col = GetColorU32((held && highlighted) ? ImGuiCol_HeaderActive : highlighted ? ImGuiCol_HeaderHovered : ImGuiCol_Header);
+            ImU32 col = GetColorU32(ImGuiCol_Header); //(held && highlighted) ? ImGuiCol_HeaderActive : highlighted ? ImGuiCol_HeaderHovered : ImGuiCol_Header);
             RenderFrame(bb.Min, bb.Max, col, false, 0.0f);
         }
         if (g.NavId == id)
@@ -7196,9 +7297,27 @@ bool ImGui::Selectable(const char* label, bool selected, ImGuiSelectableFlags fl
             PopColumnsBackground();
     }
 
+    // ANIMATION
+
+    
+    ImVec4 txtStart = ImGui::GetStyleColorVec4(ImGuiCol_TextDisabled);
+    ImVec4 txtEnd = ImGui::GetStyleColorVec4(ImGuiCol_Text);
+
+    if (hovered) {
+        anim_list[id] = ImMin(anim_list[id] + animation_speed, 1.0f);
+    }
+    else {
+        anim_list[id] = ImMax(anim_list[id] - animation_speed, 0.0f);
+    }
+
+    ImVec4 animatedText = ImLerp(txtStart, txtEnd, anim_list[id]);
+
     // Text stays at the submission position. Alignment/clipping extents ignore SpanAllColumns.
-    if (is_visible)
-        RenderTextClipped(pos, ImVec2(window->WorkRect.Max.x, pos.y + size.y), label, NULL, &label_size, style.SelectableTextAlign, &bb);
+    if (is_visible) {
+        ImGui::PushStyleColor(ImGuiCol_Text, animatedText);
+        RenderTextClipped(pos, ImVec2(window->WorkRect.Max.x, pos.y + size.y), label, NULL, &label_size, style.SelectableTextAlign, &bb, ImGuiCol_Text);
+        ImGui::PopStyleColor();
+    }
 
     // Automatically close popups
     if (pressed && (window->Flags & ImGuiWindowFlags_Popup) && !(flags & ImGuiSelectableFlags_NoAutoClosePopups) && (g.LastItemData.ItemFlags & ImGuiItemFlags_AutoClosePopups))
@@ -10295,6 +10414,7 @@ bool    ImGui::TabItemEx(ImGuiTabBar* tab_bar, const char* label, bool* p_open, 
     }
 #endif
 
+    // TODO: SWITCHING TAB ANIMATION
     // Render tab shape
     const bool is_visible = (g.LastItemData.StatusFlags & ImGuiItemStatusFlags_Visible) && !(flags & ImGuiTabItemFlags_Invisible);
     if (is_visible)

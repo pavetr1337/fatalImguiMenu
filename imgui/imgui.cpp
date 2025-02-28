@@ -1371,6 +1371,36 @@ ImGuiStyle::ImGuiStyle()
     ImGui::StyleColorsDark(this);
 }
 
+// It's for DPI scale
+void ImGuiStyle::CacheScales()
+{
+    _WindowPadding = WindowPadding;
+    _WindowRounding = WindowRounding;
+    _WindowMinSize = WindowMinSize;
+    _ChildRounding = ChildRounding;
+    _PopupRounding = PopupRounding;
+    _FramePadding = FramePadding;
+    _FrameRounding = FrameRounding;
+    _ItemSpacing = ItemSpacing;
+    _ItemInnerSpacing = ItemInnerSpacing;
+    _CellPadding = CellPadding;
+    _TouchExtraPadding = TouchExtraPadding;
+    _IndentSpacing = IndentSpacing;
+    _ColumnsMinSpacing = ColumnsMinSpacing;
+    _ScrollbarSize = ScrollbarSize;
+    _ScrollbarRounding = ScrollbarRounding;
+    _GrabMinSize = GrabMinSize;
+    _GrabRounding = GrabRounding;
+    _LogSliderDeadzone = LogSliderDeadzone;
+    _TabRounding = TabRounding;
+    _TabMinWidthForCloseButton = TabMinWidthForCloseButton;
+    _TabBarOverlineSize = TabBarOverlineSize;
+    _SeparatorTextPadding = SeparatorTextPadding;
+    _DisplayWindowPadding = DisplayWindowPadding;
+    _DisplaySafeAreaPadding = DisplaySafeAreaPadding;
+    _MouseCursorScale = MouseCursorScale;
+}
+
 // To scale your entire UI (e.g. if you want your app to use High DPI or generally be DPI aware) you may use this helper function. Scaling the fonts is done separately and is up to you.
 // Important: This operation is lossy because we round all sizes to integer. If you need to change your scale multiples, call this over a freshly initialized ImGuiStyle structure rather than scaling multiple times.
 void ImGuiStyle::ScaleAllSizes(float scale_factor)
@@ -1400,6 +1430,36 @@ void ImGuiStyle::ScaleAllSizes(float scale_factor)
     DisplayWindowPadding = ImTrunc(DisplayWindowPadding * scale_factor);
     DisplaySafeAreaPadding = ImTrunc(DisplaySafeAreaPadding * scale_factor);
     MouseCursorScale = ImTrunc(MouseCursorScale * scale_factor);
+}
+
+// Set scale relative to 100% instead of changing current
+void ImGuiStyle::SetDPIScale(float scale_factor)
+{
+    WindowPadding = ImTrunc(_WindowPadding * scale_factor);
+    WindowRounding = ImTrunc(_WindowRounding * scale_factor);
+    WindowMinSize = ImTrunc(_WindowMinSize * scale_factor);
+    ChildRounding = ImTrunc(_ChildRounding * scale_factor);
+    PopupRounding = ImTrunc(_PopupRounding * scale_factor);
+    FramePadding = ImTrunc(_FramePadding * scale_factor);
+    FrameRounding = ImTrunc(_FrameRounding * scale_factor);
+    ItemSpacing = ImTrunc(_ItemSpacing * scale_factor);
+    ItemInnerSpacing = ImTrunc(_ItemInnerSpacing * scale_factor);
+    CellPadding = ImTrunc(_CellPadding * scale_factor);
+    TouchExtraPadding = ImTrunc(_TouchExtraPadding * scale_factor);
+    IndentSpacing = ImTrunc(_IndentSpacing * scale_factor);
+    ColumnsMinSpacing = ImTrunc(_ColumnsMinSpacing * scale_factor);
+    ScrollbarSize = ImTrunc(_ScrollbarSize * scale_factor);
+    ScrollbarRounding = ImTrunc(_ScrollbarRounding * scale_factor);
+    GrabMinSize = ImTrunc(_GrabMinSize * scale_factor);
+    GrabRounding = ImTrunc(_GrabRounding * scale_factor);
+    LogSliderDeadzone = ImTrunc(_LogSliderDeadzone * scale_factor);
+    TabRounding = ImTrunc(_TabRounding * scale_factor);
+    TabMinWidthForCloseButton = (_TabMinWidthForCloseButton != FLT_MAX) ? ImTrunc(_TabMinWidthForCloseButton * scale_factor) : FLT_MAX;
+    TabBarOverlineSize = ImTrunc(_TabBarOverlineSize * scale_factor);
+    SeparatorTextPadding = ImTrunc(_SeparatorTextPadding * scale_factor);
+    DisplayWindowPadding = ImTrunc(_DisplayWindowPadding * scale_factor);
+    DisplaySafeAreaPadding = ImTrunc(_DisplaySafeAreaPadding * scale_factor);
+    MouseCursorScale = ImTrunc(_MouseCursorScale * scale_factor);
 }
 
 ImGuiIO::ImGuiIO()

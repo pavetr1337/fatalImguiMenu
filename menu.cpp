@@ -125,13 +125,17 @@ void imgui_checkbox_col(const char* label, bool* v, float* col, float width) {
     ImGui::PopStyleVar();
 }
 
-void imgui_drawimage(IDirect3DDevice9* device, const unsigned char* image_data, size_t image_size, ImVec2 size) {
-    IDirect3DTexture9* texture = LoadTextureFromMemory(device, image_data, image_size);
+std::unordered_map<std::string, IDirect3DTexture9*> textures;
 
-    if (!texture) {
+void imgui_cacheImage(IDirect3DDevice9* device, std::string textureID, const unsigned char* image_data, size_t image_size) {
+    textures[textureID] = LoadTextureFromMemory(device, image_data, image_size);
+}
+
+void imgui_drawimage(std::string textureID, ImVec2 size) {
+    if (!textures[textureID]) {
         ImGui::Text(xorstr("No texture"));
     }
-    ImGui::Image((ImTextureID)(intptr_t)texture, size);
+    ImGui::Image((ImTextureID)(intptr_t)textures[textureID], size);
 }
 
 ImVec4 col_to_imvec4(float* col) {
@@ -264,8 +268,14 @@ const char* chams_types[] = { "Flat", "Metal", "Glass", "Wireframe", "Glow" };
 
 const char* skyboxes[] = { "Morning", "Day", "Evening", "Night", "Cloud" };
 
+float dpi_scales_num[] = { 0.85f, 1.f, 1.25f, 1.5f, 1.75f, 2.f };
+
+bool dpi_cached = false;
+bool img_cached = false;
+
 void draw_menu(IDirect3DDevice9* device) {
 	ImGuiStyle& style = ImGui::GetStyle();
+    ImGuiIO& io = ImGui::GetIO();
     
     ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, vars::styles::rounding);
     ImGui::PushStyleVar(ImGuiStyleVar_TabBarBorderSize, 0.f);
@@ -276,6 +286,10 @@ void draw_menu(IDirect3DDevice9* device) {
     ImGui::PushStyleVar(ImGuiStyleVar_GrabRounding, vars::styles::rounding);
 
     ImGui::PushStyleVar(ImGuiStyleVar_ChildBorderSize, 1.f);
+    ImGui::PushStyleVar(ImGuiStyleVar_ScrollbarSize, vars::styles::scroll_width);
+
+    //ImGui::PushStyleVar(ImGuiStyleVar_AnimationTime, vars::styles::anim_speed);
+    ImGuiStyle* pstyle = &ImGui::GetStyle();
 
 	ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(vars::colors::window_bg[0], vars::colors::window_bg[1], vars::colors::window_bg[2], vars::colors::window_bg[3]));
 	ImGui::PushStyleColor(ImGuiCol_PopupBg, ImVec4(vars::colors::window_bg[0], vars::colors::window_bg[1], vars::colors::window_bg[2], vars::colors::window_bg[3]));
@@ -305,7 +319,31 @@ void draw_menu(IDirect3DDevice9* device) {
     ImGui::PushStyleColor(ImGuiCol_HeaderActive, ImVec4(vars::colors::selection_high[0], vars::colors::selection_high[1], vars::colors::selection_high[2], vars::colors::selection_high[3]));
     ImGui::PushStyleColor(ImGuiCol_Header, ImVec4(vars::colors::transp[0], vars::colors::transp[1], vars::colors::transp[2], vars::colors::transp[3]));
 
-    ImGui::SetNextWindowSize(vars::styles::win_size, ImGuiCond_Once);
+    ImGui::PushStyleColor(ImGuiCol_ScrollbarBg, ImVec4(vars::colors::window_bg[0], vars::colors::window_bg[1], vars::colors::window_bg[2], vars::colors::window_bg[3]));
+    ImGui::PushStyleColor(ImGuiCol_ScrollbarGrab, ImVec4(vars::colors::button[0], vars::colors::button[1], vars::colors::button[2], vars::colors::button[3]));
+    ImGui::PushStyleColor(ImGuiCol_ScrollbarGrabHovered, ImVec4(vars::colors::button_hover[0], vars::colors::button_hover[1], vars::colors::button_hover[2], vars::colors::button_hover[3]));
+    ImGui::PushStyleColor(ImGuiCol_ScrollbarGrabActive, ImVec4(vars::colors::button_clicked[0], vars::colors::button_clicked[1], vars::colors::button_clicked[2], vars::colors::button_clicked[3]));
+
+    if (!dpi_cached) {
+        pstyle->CacheScales();
+        dpi_cached = true;
+        float new_dpi = dpi_scales_num[vars::settings::misc::dpi_scale];
+        pstyle->SetDPIScale(new_dpi);
+        vars::styles::win_size_ex = vars::styles::win_size;
+        vars::styles::win_size.x = vars::styles::win_size.x * new_dpi;
+        vars::styles::win_size.y = vars::styles::win_size.y * new_dpi;
+        io.FontGlobalScale = new_dpi;
+    }
+
+    if (!img_cached) {
+        imgui_cacheImage(device, "shaxter_image", visPreview, visPreviewSize);
+        imgui_cacheImage(device, "printer_image", visPreviewEnt, visPreviewEntSize);
+
+        img_cached = true;
+    }
+    
+
+    ImGui::SetNextWindowSize(vars::styles::win_size); // Don't use ImGuiCond_Once due to DPI scale
 
     ImGui::PushFont(vars::fonts::josefin_sans_regular);
 	ImGui::Begin(xorstr("FATALMENU by Pavetr"), nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
@@ -637,7 +675,7 @@ void draw_menu(IDirect3DDevice9* device) {
                 ImGui::SetCursorPos(ImVec2(vars::styles::margin * 4, vars::styles::margin * 4 + check_size));
                 ImVec2 img_pos = ImGui::GetCursorScreenPos();
                 ImVec2 img_size = ImVec2(row_width - vars::styles::margin * 8, row_height - vars::styles::margin * 8 - check_size);
-                imgui_drawimage(device, visPreview, visPreviewSize, img_size);
+                imgui_drawimage("shaxter_image", img_size);
                 display_vis_preview(ImVec2(img_pos.x, img_pos.y - check_size), ImVec2(img_size.x, img_size.y + check_size));
                 
                 ImGui::EndChild();
@@ -725,7 +763,7 @@ void draw_menu(IDirect3DDevice9* device) {
                 ImGui::SetCursorPos(ImVec2(vars::styles::margin * 4, vars::styles::margin * 4 + row_height * 0.25f));
                 ImVec2 img_pos = ImGui::GetCursorScreenPos();
                 ImVec2 img_size = ImVec2(row_width - vars::styles::margin * 8, row_height*0.5f - vars::styles::margin * 8 - check_size);
-                imgui_drawimage(device, visPreviewEnt, visPreviewEntSize, img_size);
+                imgui_drawimage("printer_image", img_size);
                 display_vis_preview_ent(ImVec2(img_pos.x, img_pos.y - check_size), ImVec2(img_size.x, img_size.y + check_size));
 
                 ImGui::EndChild();
@@ -845,10 +883,18 @@ void draw_menu(IDirect3DDevice9* device) {
         ImGui::SetCursorPosX(row_width*2 + vars::styles::margin*2);
 
         ImGui::BeginChild(xorstr("misc_sect_5"), ImVec2(row_width, row_height + maintab_h - vars::styles::margin), ImGuiChildFlags_Borders, ImGuiWindowFlags_AlwaysUseWindowPadding);
-        add_child_label(ImGui::GetCursorScreenPos(), "MENU", curtab);
+        // TIP: This trick fixes overlapping text while user scrolls down
+        add_child_label(ImVec2(ImGui::GetCursorScreenPos().x, ImGui::GetCursorScreenPos().y + ImGui::GetScrollY()), "MENU", curtab);
 
         const char* dpi_scales[] = { "85%", "100%", "125%", "150%", "175%", "200%"};
-        ImGui::Combo(xorstr("DPI Scale"), &vars::settings::misc::dpi_scale, dpi_scales, 6, -1, checkboxSize[0]);
+        if (ImGui::Combo(xorstr("DPI Scale"), &vars::settings::misc::dpi_scale, dpi_scales, 6, -1, checkboxSize[0])) {
+            float new_dpi = dpi_scales_num[vars::settings::misc::dpi_scale];
+            pstyle->SetDPIScale(new_dpi);
+            vars::styles::win_size.x = vars::styles::win_size_ex.x * new_dpi;
+            vars::styles::win_size.y = vars::styles::win_size_ex.y * new_dpi;
+            io.FontGlobalScale = new_dpi;
+        }
+        
 
         ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.f);
 
@@ -866,6 +912,15 @@ void draw_menu(IDirect3DDevice9* device) {
         ImGui::ColorEdit4(xorstr("Hovered background"), vars::colors::frame_bg_hover, ImGuiColorEditFlags_NoInputs);
         ImGui::ColorEdit4(xorstr("Active background"), vars::colors::frame_bg_active, ImGuiColorEditFlags_NoInputs);
 
+        ImGui::SliderFloat(xorstr("Rounding"), &vars::styles::rounding, 0.f, 20.f, "%.2f px", ImGuiSliderFlags_FixedWidth | ImGuiSliderFlags_AlwaysClamp, checkboxSize[0]);
+        ImGui::SliderFloat(xorstr("Margin"), &vars::styles::margin, 0.f, 15.f, "%.2f px", ImGuiSliderFlags_FixedWidth | ImGuiSliderFlags_AlwaysClamp, checkboxSize[0]);
+        ImGui::SliderFloat(xorstr("Animation speed"), &vars::styles::anim_speed, 0.f, 10.f, "%.2f sec", ImGuiSliderFlags_FixedWidth | ImGuiSliderFlags_AlwaysClamp, checkboxSize[0]);
+        ImGui::SliderFloat(xorstr("Padding X"), &vars::styles::tab_padding.x, 0.f, 15.f, "%.2f px", ImGuiSliderFlags_FixedWidth | ImGuiSliderFlags_AlwaysClamp, checkboxSize[0]);
+        ImGui::SliderFloat(xorstr("Padding Y"), &vars::styles::tab_padding.y, 0.f, 15.f, "%.2f px", ImGuiSliderFlags_FixedWidth | ImGuiSliderFlags_AlwaysClamp, checkboxSize[0]);
+        
+        ImGui::SliderFloat(xorstr("Scrollbar width"), &vars::styles::scroll_width, 0.f, 25.f, "%.2f px", ImGuiSliderFlags_FixedWidth | ImGuiSliderFlags_AlwaysClamp, checkboxSize[0]);
+
+        
         ImGui::PopStyleVar();
 
         ImGui::EndChild();
@@ -1006,6 +1061,6 @@ void draw_menu(IDirect3DDevice9* device) {
 
     ImGui::PopFont();
 
-	ImGui::PopStyleColor(23);
-	ImGui::PopStyleVar(8);
+	ImGui::PopStyleColor(27);
+	ImGui::PopStyleVar(9);
 }
