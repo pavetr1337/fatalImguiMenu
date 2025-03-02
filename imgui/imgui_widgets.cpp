@@ -10546,7 +10546,6 @@ void ImGui::TabItemBackground(ImDrawList* draw_list, const ImRect& bb, ImGuiTabI
     float x1 = ImLerp(bb.Min.x+width/2, bb.Min.x, anim_list[id]);
     float x2 = ImLerp(bb.Min.x+width/2, bb.Max.x, anim_list[id]);
 
-    std::cout << id << " " << width << std::endl;
     IM_UNUSED(flags);
     IM_ASSERT(width > 0.0f);
     const float rounding = ImMax(0.0f, ImMin((flags & ImGuiTabItemFlags_Button) ? g.Style.FrameRounding : g.Style.TabRounding, width * 0.5f - 1.0f));
