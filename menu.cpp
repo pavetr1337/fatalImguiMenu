@@ -13,6 +13,9 @@ const char* tabs[6] = {
         ICON_FA_PAINT_BRUSH " SKINS"
 };
 
+float dpi_scales_num[] = { 0.85f, 1.f, 1.25f, 1.5f, 1.75f, 2.f };
+float checkboxSizeEx = 16.f;
+
 void load_fonts() {
     ImGuiIO& io = ImGui::GetIO();
 
@@ -87,9 +90,8 @@ void imgui_hotkey(ImGuiKey* k, const ImVec2& size_arg = ImVec2(0, 0))
 
 int hashes = 0;
 
-float check_size = 16.f;
-
 void imgui_checkbox_bind(const char* icon, const char* label, bool* v, ImGuiKey* k_v, float width) {
+    float check_size = checkboxSizeEx * dpi_scales_num[vars::settings::misc::dpi_scale];
     ImGui::CheckboxSized(label, v, ImVec2(width - vars::styles::margin * 3 - check_size, check_size));
     ImGui::SameLine();
     ImGui::SetCursorPos(ImVec2(width - vars::styles::margin * 1.5f - check_size, ImGui::GetCursorPosY() - check_size * 0.25f));
@@ -116,6 +118,7 @@ void imgui_checkbox_bind(const char* icon, const char* label, bool* v, ImGuiKey*
 }
 
 void imgui_checkbox_col(const char* label, bool* v, float* col, float width) {
+    float check_size = checkboxSizeEx * dpi_scales_num[vars::settings::misc::dpi_scale];
     ImGui::CheckboxSized(label, v, ImVec2(width - vars::styles::margin * 3 - check_size, check_size));
     ImGui::SameLine();
     ImGui::SetCursorPos(ImVec2(width - vars::styles::margin * 1.5f - check_size, ImGui::GetCursorPosY() - check_size * 0.25f));
@@ -143,6 +146,7 @@ ImVec4 col_to_imvec4(float* col) {
 }
 
 void display_vis_preview(ImVec2 pos, ImVec2 size) {
+    float check_size = checkboxSizeEx * dpi_scales_num[vars::settings::misc::dpi_scale];
     if (vars::settings::visuals::name) {
         ImGui::PushStyleColor(ImGuiCol_Text, col_to_imvec4(vars::settings::visuals::name_col));
         ImGui::GetWindowDrawList()->AddText(ImVec2(pos.x+size.x/2-ImGui::CalcTextSize("Exec")[0]/2, pos.y), ImGui::GetColorU32(ImGuiCol_Text), "Exec");
@@ -228,6 +232,7 @@ void display_vis_preview(ImVec2 pos, ImVec2 size) {
 }
 
 void display_vis_preview_ent(ImVec2 pos, ImVec2 size) {
+    float check_size = checkboxSizeEx * dpi_scales_num[vars::settings::misc::dpi_scale];
     if (vars::settings::visuals::ent_name) {
         ImGui::PushStyleColor(ImGuiCol_Text, col_to_imvec4(vars::settings::visuals::ent_name_col));
         ImGui::GetWindowDrawList()->AddText(ImVec2(pos.x + size.x / 2 - ImGui::CalcTextSize("Printer")[0] / 2, pos.y), ImGui::GetColorU32(ImGuiCol_Text), "Printer");
@@ -268,10 +273,10 @@ const char* chams_types[] = { "Flat", "Metal", "Glass", "Wireframe", "Glow" };
 
 const char* skyboxes[] = { "Morning", "Day", "Evening", "Night", "Cloud" };
 
-float dpi_scales_num[] = { 0.85f, 1.f, 1.25f, 1.5f, 1.75f, 2.f };
-
 bool dpi_cached = false;
 bool img_cached = false;
+
+
 
 void draw_menu(IDirect3DDevice9* device) {
 	ImGuiStyle& style = ImGui::GetStyle();
@@ -287,8 +292,9 @@ void draw_menu(IDirect3DDevice9* device) {
 
     ImGui::PushStyleVar(ImGuiStyleVar_ChildBorderSize, 1.f);
     ImGui::PushStyleVar(ImGuiStyleVar_ScrollbarSize, vars::styles::scroll_width);
+    ImGui::PushStyleVar(ImGuiStyleVar_PlaySfx, vars::styles::play_sfx);
+    ImGui::PushStyleVar(ImGuiStyleVar_AnimSpeed, vars::styles::anim_speed);
 
-    //ImGui::PushStyleVar(ImGuiStyleVar_AnimationTime, vars::styles::anim_speed);
     ImGuiStyle* pstyle = &ImGui::GetStyle();
 
 	ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(vars::colors::window_bg[0], vars::colors::window_bg[1], vars::colors::window_bg[2], vars::colors::window_bg[3]));
@@ -464,7 +470,8 @@ void draw_menu(IDirect3DDevice9* device) {
     float row_height = vars::styles::win_size[1] - endtab_h - maintab_h - 2.f - vars::styles::margin * 7;
     float vis_small_h = row_height / 5 - vars::styles::margin * 2;
 
-    ImVec2 checkboxSize = ImVec2(row_width - vars::styles::margin * 2, 16.f);
+    ImVec2 checkboxSize = ImVec2(row_width - vars::styles::margin * 2, checkboxSizeEx*dpi_scales_num[vars::settings::misc::dpi_scale]);
+    float check_size = checkboxSizeEx * dpi_scales_num[vars::settings::misc::dpi_scale];
 
     ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(vars::colors::child_bg[0], vars::colors::child_bg[1], vars::colors::child_bg[2], vars::colors::child_bg[3]));
     if (curtab == 0) {
@@ -914,10 +921,14 @@ void draw_menu(IDirect3DDevice9* device) {
 
         ImGui::SliderFloat(xorstr("Rounding"), &vars::styles::rounding, 0.f, 20.f, "%.2f px", ImGuiSliderFlags_FixedWidth | ImGuiSliderFlags_AlwaysClamp, checkboxSize[0]);
         ImGui::SliderFloat(xorstr("Margin"), &vars::styles::margin, 0.f, 15.f, "%.2f px", ImGuiSliderFlags_FixedWidth | ImGuiSliderFlags_AlwaysClamp, checkboxSize[0]);
-        ImGui::SliderFloat(xorstr("Animation speed"), &vars::styles::anim_speed, 0.f, 10.f, "%.2f sec", ImGuiSliderFlags_FixedWidth | ImGuiSliderFlags_AlwaysClamp, checkboxSize[0]);
+        ImGui::SliderFloat(xorstr("Animation time"), &vars::styles::anim_speed, 0.f, 5.f, "%.2f s", ImGuiSliderFlags_FixedWidth | ImGuiSliderFlags_AlwaysClamp, checkboxSize[0]);
         ImGui::SliderFloat(xorstr("Padding X"), &vars::styles::tab_padding.x, 0.f, 15.f, "%.2f px", ImGuiSliderFlags_FixedWidth | ImGuiSliderFlags_AlwaysClamp, checkboxSize[0]);
         ImGui::SliderFloat(xorstr("Padding Y"), &vars::styles::tab_padding.y, 0.f, 15.f, "%.2f px", ImGuiSliderFlags_FixedWidth | ImGuiSliderFlags_AlwaysClamp, checkboxSize[0]);
         
+        static bool enable_sfx = true;
+        ImGui::CheckboxSized(xorstr("Play SFX"), &enable_sfx, ImVec2(checkboxSize[0], check_size));
+        vars::styles::play_sfx = enable_sfx ? 1.f : 0.f;
+
         ImGui::SliderFloat(xorstr("Scrollbar width"), &vars::styles::scroll_width, 0.f, 25.f, "%.2f px", ImGuiSliderFlags_FixedWidth | ImGuiSliderFlags_AlwaysClamp, checkboxSize[0]);
 
         
@@ -1062,5 +1073,5 @@ void draw_menu(IDirect3DDevice9* device) {
     ImGui::PopFont();
 
 	ImGui::PopStyleColor(27);
-	ImGui::PopStyleVar(9);
+	ImGui::PopStyleVar(11);
 }

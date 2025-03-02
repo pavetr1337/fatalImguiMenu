@@ -50,6 +50,12 @@ Index of this file:
 #include <list>
 #include <map>
 
+// Windows PlaySound API
+#include <windows.h>
+#include <mmsystem.h>
+#pragma comment(lib, "winmm.lib")
+#include "../img/click_sfx.hpp"
+
 //-------------------------------------------------------------------------
 // Warnings
 //-------------------------------------------------------------------------
@@ -138,8 +144,6 @@ static const ImU64          IM_U64_MAX = (2ULL * 9223372036854775807LL + 1);
 static bool     InputTextFilterCharacter(ImGuiContext* ctx, unsigned int* p_char, ImGuiInputTextFlags flags, ImGuiInputTextCallback callback, void* user_data, bool input_source_is_clipboard = false);
 static int      InputTextCalcTextLenAndLineCount(const char* text_begin, const char** out_text_end);
 static ImVec2   InputTextCalcTextSize(ImGuiContext* ctx, const char* text_begin, const char* text_end, const char** remaining = NULL, ImVec2* out_offset = NULL, bool stop_on_new_line = false);
-
-const float animation_speed = 0.1f; // Speed of the transitions (smaller = slower)
 
 //-------------------------------------------------------------------------
 // [SECTION] Widgets: Text, etc.
@@ -565,7 +569,12 @@ bool ImGui::ButtonBehavior(const ImRect& bb, ImGuiID id, bool* out_hovered, bool
         for (int button = 0; button < 3; button++)
             if (flags & (ImGuiButtonFlags_MouseButtonLeft << button)) // Handle ImGuiButtonFlags_MouseButtonRight and ImGuiButtonFlags_MouseButtonMiddle here.
             {
-                if (IsMouseClicked(button, ImGuiInputFlags_None, test_owner_id) && mouse_button_clicked == -1) { mouse_button_clicked = button; }
+                if (IsMouseClicked(button, ImGuiInputFlags_None, test_owner_id) && mouse_button_clicked == -1) {
+                    if (ImGui::GetStyle().PlaySfx != 0.f) {
+                        PlaySound(reinterpret_cast<LPCWSTR>(clickSound), NULL, SND_MEMORY | SND_ASYNC);
+                    }
+                    mouse_button_clicked = button;
+                }
                 if (IsMouseReleased(button, test_owner_id) && mouse_button_released == -1) { mouse_button_released = button; }
             }
 
@@ -759,10 +768,10 @@ bool ImGui::ButtonEx(const char* label, const ImVec2& size_arg, ImGuiButtonFlags
     ImVec4 bgEnd = ImGui::GetStyleColorVec4(ImGuiCol_ButtonHovered);
     
     if (hovered) {
-        anim_list[id] = ImMin(anim_list[id] + animation_speed, 1.0f);
+        anim_list[id] = ImMin(anim_list[id] + style.AnimSpeed, 1.0f);
     }
     else {
-        anim_list[id] = ImMax(anim_list[id] - animation_speed, 0.0f);
+        anim_list[id] = ImMax(anim_list[id] - style.AnimSpeed, 0.0f);
     }
 
     ImVec4 animatedText = ImLerp(txtStart, txtEnd, anim_list[id]);
@@ -1227,10 +1236,10 @@ bool ImGui::Checkbox(const char* label, bool* v)
     ImVec4 bgEnd = ImGui::GetStyleColorVec4(ImGuiCol_FrameBgHovered);
 
     if (hovered) {
-        anim_list[id] = ImMin(anim_list[id] + animation_speed, 1.0f);
+        anim_list[id] = ImMin(anim_list[id] + style.AnimSpeed, 1.0f);
     }
     else {
-        anim_list[id] = ImMax(anim_list[id] - animation_speed, 0.0f);
+        anim_list[id] = ImMax(anim_list[id] - style.AnimSpeed, 0.0f);
     }
 
     ImVec4 animatedText = ImLerp(txtStart, txtEnd, anim_list[id]);
@@ -1326,10 +1335,10 @@ bool ImGui::CheckboxSized(const char* label, bool* v, ImVec2 size)
     ImVec4 bgEnd = ImGui::GetStyleColorVec4(ImGuiCol_FrameBgHovered);
 
     if (hovered) {
-        anim_list[id] = ImMin(anim_list[id] + animation_speed, 1.0f);
+        anim_list[id] = ImMin(anim_list[id] + style.AnimSpeed, 1.0f);
     }
     else {
-        anim_list[id] = ImMax(anim_list[id] - animation_speed, 0.0f);
+        anim_list[id] = ImMax(anim_list[id] - style.AnimSpeed, 0.0f);
     }
 
     ImVec4 animatedText = ImLerp(txtStart, txtEnd, anim_list[id]);
@@ -2022,10 +2031,10 @@ bool ImGui::BeginCombo(const char* label, const char* preview_value, ImGuiComboF
     ImVec4 bgEnd = ImGui::GetStyleColorVec4(ImGuiCol_FrameBgHovered);
 
     if (hovered) {
-        anim_list[id] = ImMin(anim_list[id] + animation_speed, 1.0f);
+        anim_list[id] = ImMin(anim_list[id] + style.AnimSpeed, 1.0f);
     }
     else {
-        anim_list[id] = ImMax(anim_list[id] - animation_speed, 0.0f);
+        anim_list[id] = ImMax(anim_list[id] - style.AnimSpeed, 0.0f);
     }
 
     ImVec4 animatedText = ImLerp(txtStart, txtEnd, anim_list[id]);
@@ -3411,8 +3420,13 @@ bool ImGui::SliderScalar(const char* label, ImGuiDataType data_type, void* p_dat
         // Tabbing or CTRL-clicking on Slider turns it into an input box
         const bool clicked = hovered && IsMouseClicked(0, ImGuiInputFlags_None, id);
         const bool make_active = (clicked || g.NavActivateId == id);
-        if (make_active && clicked)
+        if (make_active && clicked) {
+            if (style.PlaySfx != 0.f) {
+                PlaySound(reinterpret_cast<LPCWSTR>(clickSound), NULL, SND_MEMORY | SND_ASYNC);
+            }
+
             SetKeyOwner(ImGuiKey_MouseLeft, id);
+        }
         if (make_active && temp_input_allowed)
             if ((clicked && g.IO.KeyCtrl) || (g.NavActivateId == id && (g.NavActivateFlags & ImGuiActivateFlags_PreferInput)))
                 temp_input_is_active = true;
@@ -3446,10 +3460,10 @@ bool ImGui::SliderScalar(const char* label, ImGuiDataType data_type, void* p_dat
     ImVec4 bgEnd = ImGui::GetStyleColorVec4(ImGuiCol_FrameBgHovered);
 
     if (hovered) {
-        anim_list[id] = ImMin(anim_list[id] + animation_speed, 1.0f);
+        anim_list[id] = ImMin(anim_list[id] + style.AnimSpeed, 1.0f);
     }
     else {
-        anim_list[id] = ImMax(anim_list[id] - animation_speed, 0.0f);
+        anim_list[id] = ImMax(anim_list[id] - style.AnimSpeed, 0.0f);
     }
 
     ImVec4 animatedText = ImLerp(txtStart, txtEnd, anim_list[id]);
@@ -3468,10 +3482,6 @@ bool ImGui::SliderScalar(const char* label, ImGuiDataType data_type, void* p_dat
     if (value_changed)
         MarkItemEdited(id);
 
-
-    //anim_list[id] = ImMin(anim_list[id] + animation_speed * 0.3f, 1.0f);
-
-   // float animatedProg = ImLerp(frame_bb.Min.x, grab_bb.Max.x, anim_list[id]);
 
     // Render grab
     if (grab_bb.Max.x > grab_bb.Min.x)
@@ -7304,10 +7314,10 @@ bool ImGui::Selectable(const char* label, bool selected, ImGuiSelectableFlags fl
     ImVec4 txtEnd = ImGui::GetStyleColorVec4(ImGuiCol_Text);
 
     if (hovered) {
-        anim_list[id] = ImMin(anim_list[id] + animation_speed, 1.0f);
+        anim_list[id] = ImMin(anim_list[id] + style.AnimSpeed, 1.0f);
     }
     else {
-        anim_list[id] = ImMax(anim_list[id] - animation_speed, 0.0f);
+        anim_list[id] = ImMax(anim_list[id] - style.AnimSpeed, 0.0f);
     }
 
     ImVec4 animatedText = ImLerp(txtStart, txtEnd, anim_list[id]);
@@ -10414,15 +10424,24 @@ bool    ImGui::TabItemEx(ImGuiTabBar* tab_bar, const char* label, bool* p_open, 
     }
 #endif
 
-    // TODO: SWITCHING TAB ANIMATION
     // Render tab shape
     const bool is_visible = (g.LastItemData.StatusFlags & ImGuiItemStatusFlags_Visible) && !(flags & ImGuiTabItemFlags_Invisible);
+
+    if (tab_contents_visible) {
+
+        anim_list[id] = ImMin(anim_list[id] + style.AnimSpeed, 1.0f);
+    }
+    else {
+        anim_list[id] = ImMax(anim_list[id] - style.AnimSpeed, 0.0f);
+    }
+
     if (is_visible)
     {
         ImDrawList* display_draw_list = window->DrawList;
         //const ImU32 tab_col = GetColorU32((held || hovered) ? ImGuiCol_TabHovered : tab_contents_visible ? (tab_bar_focused ? ImGuiCol_TabSelected : ImGuiCol_TabDimmedSelected) : (tab_bar_focused ? ImGuiCol_Tab : ImGuiCol_TabDimmed));
         const ImU32 tab_col = GetColorU32(tab_contents_visible ? (tab_bar_focused ? ImGuiCol_TabSelected : ImGuiCol_TabDimmedSelected) : (tab_bar_focused ? ImGuiCol_Tab : ImGuiCol_TabDimmed));
-        TabItemBackground(display_draw_list, bb, flags, tab_col);
+        
+        TabItemBackground(display_draw_list, bb, flags, tab_col, id);
         if (tab_contents_visible && (tab_bar->Flags & ImGuiTabBarFlags_DrawSelectedOverline) && style.TabBarOverlineSize > 0.0f)
         {
             // Might be moved to TabItemBackground() ?
@@ -10517,24 +10536,32 @@ ImVec2 ImGui::TabItemCalcSize(ImGuiWindow*)
     return ImVec2(0.0f, 0.0f);
 }
 
-void ImGui::TabItemBackground(ImDrawList* draw_list, const ImRect& bb, ImGuiTabItemFlags flags, ImU32 col)
+void ImGui::TabItemBackground(ImDrawList* draw_list, const ImRect& bb, ImGuiTabItemFlags flags, ImU32 col, ImGuiID id)
 {
     // While rendering tabs, we trim 1 pixel off the top of our bounding box so they can fit within a regular frame height while looking "detached" from it.
     ImGuiContext& g = *GImGui;
+    
     const float width = bb.GetWidth();
+
+    float x1 = ImLerp(bb.Min.x+width/2, bb.Min.x, anim_list[id]);
+    float x2 = ImLerp(bb.Min.x+width/2, bb.Max.x, anim_list[id]);
+
+    std::cout << id << " " << width << std::endl;
     IM_UNUSED(flags);
     IM_ASSERT(width > 0.0f);
     const float rounding = ImMax(0.0f, ImMin((flags & ImGuiTabItemFlags_Button) ? g.Style.FrameRounding : g.Style.TabRounding, width * 0.5f - 1.0f));
     const float y1 = bb.Min.y + 1.0f;
     const float y2 = bb.Max.y - g.Style.TabBarBorderSize;
 
-    draw_list->PathLineTo(ImVec2(bb.Min.x, y2));
+    // Tab item Underline
+    draw_list->PathLineTo(ImVec2(x1, y2));
 
-    draw_list->PathArcToFast(ImVec2(bb.Min.x + rounding, y2 + rounding), rounding, 6, 9);
-    draw_list->PathArcToFast(ImVec2(bb.Max.x - rounding, y2 + rounding), rounding, 9, 12);
+    draw_list->PathArcToFast(ImVec2(x1 + rounding, y2 + rounding), rounding, 6, 9);
+    draw_list->PathArcToFast(ImVec2(x2 - rounding, y2 + rounding), rounding, 9, 12);
 
-    draw_list->PathLineTo(ImVec2(bb.Max.x, y2));
+    draw_list->PathLineTo(ImVec2(x2, y2));
     draw_list->PathFillConvex(col);
+
     if (g.Style.TabBorderSize > 0.0f)
     {
         draw_list->PathLineTo(ImVec2(bb.Min.x + 0.5f, y2));
@@ -10545,6 +10572,8 @@ void ImGui::TabItemBackground(ImDrawList* draw_list, const ImRect& bb, ImGuiTabI
     }
 }
 
+
+std::map<ImGuiID, float> anim_list_tab_col;
 // Render text label (with custom clipping) + Unsaved Document marker + Close Button logic
 // We tend to lock style.FramePadding for a given tab-bar, hence the 'frame_padding' parameter.
 void ImGui::TabItemLabelAndCloseButton(ImGuiTabBar* tab_bar, ImDrawList* draw_list, const ImRect& bb, ImGuiTabItemFlags flags, ImVec2 frame_padding, const char* label, ImGuiID tab_id, ImGuiID close_button_id, bool is_contents_visible, bool* out_just_closed, bool* out_text_clipped)
@@ -10623,12 +10652,22 @@ void ImGui::TabItemLabelAndCloseButton(ImGuiTabBar* tab_bar, ImDrawList* draw_li
         ellipsis_max_x = text_pixel_clip_bb.Max.x;
     }
     LogSetNextTextDecoration("/", "\\");
-    ImGuiCol_ tab_col = ImGuiCol_TextDisabled;
-    if (IsItemHovered() || tab_bar->SelectedTabId == tab_id) {
-        tab_col = ImGuiCol_Text;
-    }
-    RenderTextEllipsis(draw_list, text_ellipsis_clip_bb.Min, text_ellipsis_clip_bb.Max, text_pixel_clip_bb.Max.x, ellipsis_max_x, label, NULL, &label_size, tab_col);
 
+    ImVec4 txtStart = ImGui::GetStyleColorVec4(ImGuiCol_TextDisabled);
+    ImVec4 txtEnd = ImGui::GetStyleColorVec4(ImGuiCol_Text);
+
+    if (IsItemHovered() || tab_bar->SelectedTabId == tab_id) {
+        anim_list_tab_col[tab_id] = ImMin(anim_list_tab_col[tab_id] + ImGui::GetStyle().AnimSpeed, 1.0f);
+    }
+    else {
+        anim_list_tab_col[tab_id] = ImMax(anim_list_tab_col[tab_id] - ImGui::GetStyle().AnimSpeed, 0.0f);
+    }
+
+    ImVec4 animatedText = ImLerp(txtStart, txtEnd, anim_list_tab_col[tab_id]);
+
+    PushStyleColor(ImGuiCol_Text, animatedText);
+    RenderTextEllipsis(draw_list, text_ellipsis_clip_bb.Min, text_ellipsis_clip_bb.Max, text_pixel_clip_bb.Max.x, ellipsis_max_x, label, NULL, &label_size, ImGuiCol_Text);
+    PopStyleColor();
 #if 0
     if (!is_contents_visible)
         g.Style.Alpha = backup_alpha;

@@ -1727,7 +1727,8 @@ enum ImGuiStyleVar_
     ImGuiStyleVar_SeparatorTextAlign,       // ImVec2    SeparatorTextAlign
     ImGuiStyleVar_SeparatorTextPadding,     // ImVec2    SeparatorTextPadding
 
-    //ImGuiStyleVar_AnimationTime,            // float     AnimationTime
+    ImGuiStyleVar_PlaySfx,                  // float     PlaySfx
+    ImGuiStyleVar_AnimSpeed,            // float     AnimSpeed
 
     ImGuiStyleVar_COUNT
 };
@@ -2220,7 +2221,8 @@ struct ImGuiStyle
     float       CircleTessellationMaxError; // Maximum error (in pixels) allowed when using AddCircle()/AddCircleFilled() or drawing rounded corner rectangles with no explicit segment count specified. Decrease for higher quality but more geometry.
     float       AnimationTime;
     float       MenuScale;
-
+    float PlaySfx;
+    float AnimSpeed;
 
 
 
@@ -2234,7 +2236,7 @@ struct ImGuiStyle
     float             HoverDelayNormal;         // Delay for IsItemHovered(ImGuiHoveredFlags_DelayNormal). "
     ImGuiHoveredFlags HoverFlagsForTooltipMouse;// Default flags when using IsItemHovered(ImGuiHoveredFlags_ForTooltip) or BeginItemTooltip()/SetItemTooltip() while using mouse.
     ImGuiHoveredFlags HoverFlagsForTooltipNav;  // Default flags when using IsItemHovered(ImGuiHoveredFlags_ForTooltip) or BeginItemTooltip()/SetItemTooltip() while using keyboard/gamepad.
-
+    
     IMGUI_API ImGuiStyle();
     IMGUI_API void CacheScales();
     IMGUI_API void ScaleAllSizes(float scale_factor);

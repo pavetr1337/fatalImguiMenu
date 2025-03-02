@@ -35,8 +35,9 @@ namespace vars {
         inline ImVec2 tab_padding = {10.f,10.f};
         inline ImVec2 win_size = { 848.f,588.f };
         inline ImVec2 win_size_ex = { 848.f,588.f }; // Equals to win_size in code, needs for DPI scaling
-        inline float anim_speed = 0.1f;
         inline float scroll_width = 12.5f;
+        inline float play_sfx = 1.f;
+        inline float anim_speed = 0.1f;
     }
 
     namespace settings {

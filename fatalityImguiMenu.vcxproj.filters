@@ -38,5 +38,6 @@
     <ClInclude Include="xorstr.hpp" />
     <ClInclude Include="texture.hpp" />
     <ClInclude Include="text_editor\TextEditor.h" />
+    <ClInclude Include="img\click_sfx.hpp" />
   </ItemGroup>
 </Project>
